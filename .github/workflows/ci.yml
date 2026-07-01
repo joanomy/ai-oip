@@ -32,5 +32,8 @@ jobs:
       - name: Type check (mypy)
         run: uv run mypy src
 
+      - name: Architecture boundaries (import-linter)
+        run: uv run lint-imports
+
       - name: Test (pytest, with coverage)
         run: uv run pytest --cov-fail-under=80

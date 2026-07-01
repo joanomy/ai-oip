@@ -34,3 +34,17 @@ so they're made deliberately and recorded here.
 - Team grows beyond 1-2 engineers (revisit mypy vs pyright for editor
   performance).
 - Coverage threshold should ratchet upward as core modules stabilize.
+
+## Addendum (2026-07-02, during M1)
+Original `.pre-commit-config.yaml` used the standard `ruff-pre-commit` and
+`mirrors-mypy` hook repos with pinned revisions. This caused real version
+drift: those pinned versions lagged behind the `uv`-managed versions used
+in CI and local dev, producing false failures (an old ruff flagging a rule
+removed upstream; an old mypy rejecting PEP 695 generic syntax that our
+target Python version and current mypy both support).
+
+Fixed by switching pre-commit to `language: system` hooks that invoke
+`uv run ruff`/`uv run mypy`/`uv run lint-imports` directly — the exact
+same binaries CI and local dev use. Trade-off: contributors must run
+`uv sync` before `pre-commit run` works (acceptable; `uv sync` is already
+step one of onboarding).

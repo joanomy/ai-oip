@@ -1,11 +1,11 @@
-# AI Platform
+# AI-IOP
 
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Milestone 0 (Environment & Repo Bootstrap) complete. No business
-logic or agents exist yet — this repo currently proves the engineering
-toolchain works end-to-end.
+**Status:** Milestone 1 (Project Architecture & Folder Structure) complete.
+Base interfaces (`BaseAgent`, `BaseRepository`) exist and are tested.
+No concrete agents, database, or business logic exist yet.
 
 ## Setup
 
@@ -29,8 +29,33 @@ cp .env.example .env
 uv run ruff check .              # lint
 uv run ruff format .             # format
 uv run mypy src                  # type check
+uv run lint-imports               # verify architecture boundaries
 uv run pytest                    # test with coverage
 uv run pre-commit run --all-files  # run all hooks manually
+```
+
+## Architecture
+
+AI-IOP is a **modular monolith**: one repository, one deployment, but
+internally split into layers with enforced, one-directional dependencies.
+`import-linter` fails CI if a lower layer imports a higher one (see
+`pyproject.toml` `[tool.importlinter]` and `docs/architecture/ADR-0002`).
+
+```
+src/ai_iop/
+├── pipelines/      # orchestrates services into end-to-end workflows
+├── services/       # business logic; the only layer that knows both
+│                     agents and repositories
+├── collectors/     # external data ingestion
+├── agents/         # single-responsibility AI units (never touch the DB)
+├── repositories/   # the ONLY layer allowed to query the database
+├── models/         # SQLAlchemy ORM — data at rest
+├── schemas/        # Pydantic — data in motion (agent I/O, API I/O)
+├── prompts/        # versioned prompt templates, external to code
+├── config/         # typed settings
+├── core/           # shared exceptions/types — depended on by everything
+├── logging/        # structured logging
+└── monitoring/     # health checks, metrics
 ```
 
 ## Project Status & Roadmap
@@ -44,8 +69,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | Milestone | Status |
 |---|---|
 | M0 — Environment & Repo Bootstrap | ✅ Complete |
-| M1 — Project Architecture & Folder Structure | ⏳ Next |
-| M2 — Configuration Management | Not started |
+| M1 — Project Architecture & Folder Structure | ✅ Complete |
+| M2 — Configuration Management | ⏳ Next |
 | M3 — Logging & Observability | Not started |
 | M4 — Database Layer | Not started |
 | M5 — Prompt Management | Not started |
