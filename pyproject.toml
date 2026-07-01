@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 readme = "README.md"
 dependencies = [
     "pydantic>=2.9",
+    "pydantic-settings>=2.5",
 ]
 
 [dependency-groups]
@@ -40,7 +41,12 @@ select = [
     "B",             # bugbear (common bug patterns)
     "SIM",           # simplify
     "ANN",           # require type annotations
+    "TID",           # flake8-tidy-imports (used here to ban direct os.environ access)
 ]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"os.environ".msg = "Read config via ai_iop.config.get_settings(), not os.environ directly."
+"os.getenv".msg = "Read config via ai_iop.config.get_settings(), not os.getenv directly."
 
 
 [tool.ruff.lint.per-file-ignores]

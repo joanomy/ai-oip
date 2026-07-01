@@ -3,9 +3,9 @@
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Milestone 1 (Project Architecture & Folder Structure) complete.
-Base interfaces (`BaseAgent`, `BaseRepository`) exist and are tested.
-No concrete agents, database, or business logic exist yet.
+**Status:** Milestone 2 (Configuration Management) complete. Typed,
+validated settings via `ai_iop.config.get_settings()`. No concrete
+agents, database, or business logic exist yet.
 
 ## Setup
 
@@ -70,8 +70,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 |---|---|
 | M0 — Environment & Repo Bootstrap | ✅ Complete |
 | M1 — Project Architecture & Folder Structure | ✅ Complete |
-| M2 — Configuration Management | ⏳ Next |
-| M3 — Logging & Observability | Not started |
+| M2 — Configuration Management | ✅ Complete |
+| M3 — Logging & Observability | ⏳ Next |
 | M4 — Database Layer | Not started |
 | M5 — Prompt Management | Not started |
 | M6 — Agent Framework Core | Not started |
