@@ -3,9 +3,9 @@
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Milestone 2 (Configuration Management) complete. Typed,
-validated settings via `ai_iop.config.get_settings()`. No concrete
-agents, database, or business logic exist yet.
+**Status:** Milestone 3 (Logging & Observability) complete. Structured
+logging via `ai_iop.logging.get_logger()`, environment-aware rendering.
+No concrete agents, database, or business logic exist yet.
 
 ## Setup
 
@@ -39,7 +39,8 @@ uv run pre-commit run --all-files  # run all hooks manually
 AI-IOP is a **modular monolith**: one repository, one deployment, but
 internally split into layers with enforced, one-directional dependencies.
 `import-linter` fails CI if a lower layer imports a higher one (see
-`pyproject.toml` `[tool.importlinter]` and `docs/architecture/ADR-0002`).
+`pyproject.toml` `[tool.importlinter]` and `docs/architecture/ADR-0002`,
+`ADR-0004` for why the layer order looks the way it does).
 
 ```
 src/ai_iop/
@@ -52,10 +53,10 @@ src/ai_iop/
 ├── models/         # SQLAlchemy ORM — data at rest
 ├── schemas/        # Pydantic — data in motion (agent I/O, API I/O)
 ├── prompts/        # versioned prompt templates, external to code
-├── config/         # typed settings
-├── core/           # shared exceptions/types — depended on by everything
-├── logging/        # structured logging
-└── monitoring/     # health checks, metrics
+├── logging/        # structured logging (depends on config)
+├── monitoring/     # health checks, metrics (depends on config)
+├── config/         # typed settings — depends only on core
+└── core/           # shared exceptions/types — depended on by everything
 ```
 
 ## Project Status & Roadmap
@@ -71,8 +72,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M0 — Environment & Repo Bootstrap | ✅ Complete |
 | M1 — Project Architecture & Folder Structure | ✅ Complete |
 | M2 — Configuration Management | ✅ Complete |
-| M3 — Logging & Observability | ⏳ Next |
-| M4 — Database Layer | Not started |
+| M3 — Logging & Observability | ✅ Complete |
+| M4 — Database Layer | ⏳ Next |
 | M5 — Prompt Management | Not started |
 | M6 — Agent Framework Core | Not started |
 | M7 — Inter-Module Communication | Not started |
