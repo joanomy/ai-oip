@@ -35,8 +35,8 @@ jobs:
       - name: Architecture boundaries (import-linter)
         run: uv run lint-imports
 
-      - name: Test (pytest, with coverage)
-        run: uv run pytest --cov-fail-under=80
+      - name: Test (pytest, with coverage floor from pyproject.toml)
+        run: uv run pytest
 
       - name: Pre-commit hooks (full parity with local pre-commit)
         run: uv run pre-commit run --all-files

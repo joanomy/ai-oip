@@ -285,7 +285,7 @@ composition-root question deferred to M6/M7).
 | Lint + format | `ruff` |
 | Type checking | `mypy --strict` |
 | Architecture enforcement | `import-linter` |
-| Testing | `pytest` + `pytest-asyncio` + `pytest-cov` (80% floor) |
+| Testing | `pytest` + `pytest-asyncio` + `pytest-cov` (90% floor, set once in `pyproject.toml` addopts) |
 | Config | `pydantic-settings` v2 -- typed, validated at startup, fail-fast |
 | Logging | `structlog` -- JSON in staging/prod, console in dev |
 | Database | SQLAlchemy 2.0 async + `asyncpg` (prod) / `aiosqlite` (tests) + Alembic |
@@ -297,7 +297,7 @@ composition-root question deferred to M6/M7).
 uv run ruff check . && uv run ruff format --check .
 uv run mypy src
 uv run lint-imports
-uv run pytest --cov-fail-under=80
+uv run pytest  # coverage floor (90%) comes from pyproject.toml addopts
 uv run pre-commit run --all-files
 ```
 

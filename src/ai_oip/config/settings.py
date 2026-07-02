@@ -14,7 +14,6 @@ Usage:
         ...
 """
 
-import logging as stdlib_logging
 from enum import StrEnum
 from functools import lru_cache
 
@@ -31,6 +30,11 @@ class Environment(StrEnum):
 
 
 _DEFAULT_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_oip_dev"
+
+# The exact set documented in .env.example and the field description —
+# deliberately narrower than what stdlib logging would accept (WARN,
+# FATAL, NOTSET, ...): one canonical name per level, no aliases.
+_ALLOWED_LOG_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR"})
 
 
 class Settings(BaseSettings):
@@ -86,7 +90,7 @@ class Settings(BaseSettings):
     @field_validator("log_level")
     @classmethod
     def _validate_log_level(cls, value: str) -> str:
-        """Fail startup on an unrecognized log level name.
+        """Fail startup on a log level outside the documented set.
 
         Without this, a typo like LOG_LEVEL=INFOO would pass Settings()
         validation (it's just a string) and only explode later inside
@@ -94,10 +98,12 @@ class Settings(BaseSettings):
         startup ValidationError this platform's config layer promises.
         Normalized to uppercase so downstream consumers never need to.
         """
-        level = stdlib_logging.getLevelName(value.upper())
-        if not isinstance(level, int):
-            raise ValueError(f"Unknown log level: {value!r}")
-        return value.upper()
+        normalized = value.upper()
+        if normalized not in _ALLOWED_LOG_LEVELS:
+            raise ValueError(
+                f"Unknown log level: {value!r}; must be one of {sorted(_ALLOWED_LOG_LEVELS)}"
+            )
+        return normalized
 
     @property
     def is_production(self) -> bool:

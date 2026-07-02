@@ -71,7 +71,9 @@ exclude = ["tests/"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "--cov=src/ai_oip --cov-report=term-missing"
+# Coverage floor lives here, once — CI and local runs both inherit it.
+# Ratcheted 80 -> 90 post-M4 per ADR-0001's "Revisit When".
+addopts = "--cov=src/ai_oip --cov-report=term-missing --cov-fail-under=90"
 
 # ---- import-linter: enforces the layered dependency rules ----
 # Lower layers must never import from higher layers. This turns the

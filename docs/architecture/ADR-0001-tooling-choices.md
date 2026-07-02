@@ -48,3 +48,16 @@ Fixed by switching pre-commit to `language: system` hooks that invoke
 same binaries CI and local dev use. Trade-off: contributors must run
 `uv sync` before `pre-commit run` works (acceptable; `uv sync` is already
 step one of onboarding).
+
+## Addendum 2 (2026-07-02, post-M4 engineering review)
+
+Coverage threshold ratcheted 80% → 90%, per this ADR's own "Revisit
+When" — the foundation modules are stable at 100%, and an 80% floor
+would let the first business-logic milestones (M5/M6) land with a large
+untested surface while CI stayed green. Deliberately not 100%: that
+invites low-value tests for trivial branches, which the original
+decision explicitly warned against.
+
+At the same time, the floor moved from repeated `--cov-fail-under` CLI
+flags (CI + docs) into `pyproject.toml` `addopts` — one source of
+truth, same drift-prevention reasoning as the pre-commit fix above.

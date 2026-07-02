@@ -104,6 +104,14 @@ def test_log_level_is_normalized_to_uppercase() -> None:
     assert settings.log_level == "DEBUG"
 
 
+def test_stdlib_aliases_outside_documented_set_are_rejected() -> None:
+    # stdlib logging would accept these, but the platform documents
+    # exactly four canonical names — no aliases.
+    for alias in ("WARN", "FATAL", "CRITICAL", "NOTSET"):
+        with pytest.raises(ValidationError, match="Unknown log level"):
+            Settings(_env_file=None, log_level=alias)
+
+
 def test_default_database_url_in_production_is_rejected() -> None:
     with pytest.raises(ValidationError, match="database_url must be explicitly set"):
         Settings(_env_file=None, environment=Environment.PRODUCTION)
