@@ -9,6 +9,27 @@ on:
 jobs:
   quality-gate:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ai_oip_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # Gates the integration tests: with this set, the real-Postgres
+      # suite runs; locally (unset) it skips.
+      INTEGRATION_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_oip_test
+
     steps:
       - uses: actions/checkout@v4
 
@@ -35,8 +56,19 @@ jobs:
       - name: Architecture boundaries (import-linter)
         run: uv run lint-imports
 
-      - name: Test (pytest, with coverage floor from pyproject.toml)
+      - name: Test (pytest — unit + real-Postgres integration; coverage floor from pyproject.toml)
         run: uv run pytest
 
       - name: Pre-commit hooks (full parity with local pre-commit)
         run: uv run pre-commit run --all-files
+
+  docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build runtime image
+        run: docker build -t ai-oip:ci .
+
+      - name: Smoke-check image
+        run: docker run --rm ai-oip:ci

@@ -224,8 +224,8 @@ AI-first software company for years to come.
 | M4 -- Prompt Management | Complete |
 | M5 -- Configuration | Complete |
 | M6 -- Database Layer | Complete |
-| M7 -- Collector Framework | Next |
-| M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Not started |
+| M7 -- Collector Framework | Complete |
+| M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Next |
 | M9 -- Workflow Discovery Agent | Not started |
 | M10 -- Opportunity Scoring | Not started |
 | M11 -- Competition Research | Not started |
@@ -238,12 +238,11 @@ AI-first software company for years to come.
 | MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
 **Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M7 -> M8..M15 in sequence ->
-MX.1 -> MX.2 -> MX.3. Prompts (M4, complete) came before the agent
-framework (M3, complete) because every agent's contract requires its
-prompt to exist as a versioned, external template. M8
-delivers the first end-to-end product output; every later milestone
-extends a working pipeline, each gated on its eval suite.
+Recommended remaining order: M8..M15 in sequence ->
+MX.1 -> MX.2 -> MX.3. The entire platform layer (M0-M7) is complete;
+every remaining milestone is business functionality. M8 delivers the
+first end-to-end product output; every later milestone extends a
+working pipeline, each gated on its eval suite.
 
 **Eval discipline (ADR-0006).** Every prompt ships with eval fixtures
 (golden inputs / expected-property outputs) — required and enforced by
@@ -251,6 +250,16 @@ the prompt loader since M4; the eval runner (`evals/`, M3) consumes
 them with contains / not_contains / matches semantics (ADR-0008). From
 M8 onward, "no concrete agent ships without an eval suite" is a
 quality gate with the same standing as the coverage floor.
+
+**Collector framework detail (M7, complete):** `BaseCollector`
+(fetch + normalize only; `CollectorError` wrapping, no persistence, no
+interpretation) emitting `CollectedItem` — the first data-in-motion
+schema, one shape across all sources. First source: Hacker News via
+the keyless Algolia HN Search API (injectable httpx client; pydantic-
+validated hits). Infra track landed alongside: Dockerfile (uv-layered,
+non-root, CI-built+smoked), compose Postgres, real-Postgres
+integration tests in CI. Composition root lands at M8 — the last
+deferral (ADR-0009 §6). See ADR-0009.
 
 **Agent framework detail (M3, complete):** `LLMProvider` interface +
 `AnthropicProvider` (injectable client; vendor SDKs never escape
@@ -286,9 +295,10 @@ references inside them; interpret them via this mapping.
 - Testing: enforced continuously by the quality gate (90% coverage
   floor), not a phase.
 - Dockerization, CI/CD hardening, real-Postgres integration tests:
-  recommended to land alongside M7 (Collector Framework), before the
-  platform talks to real external services. Until then ADR-0005's
-  SQLite-only trade-off stands.
+  LANDED at M7 (ADR-0009) -- runtime Dockerfile + compose Postgres,
+  CI Postgres 16 service container running `tests/integration/`
+  every push, CI image build+smoke job. ADR-0005's SQLite-only
+  trade-off is closed.
 - Monitoring & health checks: `monitoring/` package is scaffolded;
   build out as prerequisites for the MX.1-MX.3 autonomy stages.
 - Documentation: ongoing -- one ADR per decision, this file as the
@@ -307,7 +317,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0008`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0009`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 
@@ -361,6 +371,8 @@ repositories, per ADR-0008 §9).
 | Logging | `structlog` -- JSON in staging/prod, console in dev |
 | Database | SQLAlchemy 2.0 async + `asyncpg` (prod) / `aiosqlite` (tests) + Alembic |
 | LLM provider | `anthropic` async SDK, behind the swappable `LLMProvider` interface |
+| HTTP client | `httpx` (async), injectable into collectors |
+| Containerization | Docker (uv-layered image) + docker-compose Postgres; CI builds+smokes the image |
 | Pre-commit | Runs the *same* tool versions as CI via `language: system` hooks (a real version-drift bug was found and fixed this way -- see ADR-0001 addendum) |
 
 ## Quality Gate -- run before considering any milestone done
@@ -377,11 +389,16 @@ All five must pass.
 
 ## Known Trade-offs Currently Accepted (see ADRs for full reasoning)
 
-- Tests run against SQLite (`aiosqlite`), not a live Postgres. Exercises
-  the same SQLAlchemy code paths but not Postgres-specific behavior
-  (JSONB, locking semantics). Real Postgres integration testing deferred
-  to the Docker/CI cross-cutting track (recommended alongside M7,
-  Collector Framework), when CI gets a real Postgres service container.
+- Unit tests run against SQLite (`aiosqlite`) for speed; real-Postgres
+  integration tests (`tests/integration/`, gated on
+  INTEGRATION_DATABASE_URL) run on every CI push via a Postgres 16
+  service container, and locally via `docker compose up -d postgres`.
+  The local quality gate deliberately does NOT require Docker --
+  integration tests skip (never fail) when the URL is unset.
+- Collectors have no retry/rate-limit machinery yet -- deliberate
+  (ADR-0009): retry policy belongs to the scheduler that owns the
+  cadence (MX.1), not inside each collector. Timeouts + CollectorError
+  wrapping exist now.
 - Secrets are `SecretStr` env vars (masked in logs/repr), not a secrets
   manager. Sufficient per ADR-0003's revisit clause until deployment; a
   dedicated secrets manager lands with the Docker/CI cross-cutting
@@ -390,4 +407,5 @@ All five must pass.
   top-level package is added under `src/ai_oip/` -- it fails
   silently-permissive (unlisted modules aren't checked), not
   silently-strict. Done deliberately at M3 (providers, evals added);
-  check again at M7 if collectors adds packages.
+  checked at M7 (no new top-level packages). Re-check whenever one is
+  added.

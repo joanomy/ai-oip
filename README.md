@@ -3,12 +3,12 @@
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Platform layer complete — foundation (M0–M2), prompt
-management (M4), configuration (M5), database (M6), and the agent
-framework & evaluation harness (M3): swappable LLM providers, agent
-registry, output guardrails, run tracing, eval runner. Next up: M7
-Collector Framework, then the business agent pipeline (M8–M15). No
-concrete business models or agents exist yet.
+**Status:** The entire platform layer (M0–M7) is complete — foundation,
+prompt management, configuration, database, agent framework &
+evaluation harness, and the collector framework (first source: Hacker
+News) with Docker + real-Postgres CI integration tests. Next up: M8,
+the walking skeleton — the first end-to-end slice (collect → extract
+problems → store → report). No concrete business agents exist yet.
 
 ## Setup
 
@@ -33,10 +33,17 @@ uv run ruff check .              # lint
 uv run ruff format .             # format
 uv run mypy src                  # type check
 uv run lint-imports               # verify architecture boundaries
-uv run pytest                    # test with coverage
+uv run pytest                    # test with coverage (integration tests skip without Postgres)
 uv run pre-commit run --all-files  # run all hooks manually
 uv run alembic revision --autogenerate -m "message"  # generate a migration
 uv run alembic upgrade head      # apply migrations
+```
+
+### Real-Postgres integration tests (optional locally, always on in CI)
+
+```bash
+docker compose up -d postgres
+INTEGRATION_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/ai_oip_test uv run pytest tests/integration
 ```
 
 ## Architecture
@@ -83,8 +90,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M4 — Prompt Management | ✅ Complete |
 | M5 — Configuration | ✅ Complete |
 | M6 — Database Layer | ✅ Complete |
-| M7 — Collector Framework | ⏳ Next |
-| M8 — Walking Skeleton (Problem Extraction + thin E2E report) | Not started |
+| M7 — Collector Framework | ✅ Complete |
+| M8 — Walking Skeleton (Problem Extraction + thin E2E report) | ⏳ Next |
 | M9 — Workflow Discovery Agent | Not started |
 | M10 — Opportunity Scoring | Not started |
 | M11 — Competition Research | Not started |
