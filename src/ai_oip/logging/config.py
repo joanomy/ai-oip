@@ -14,7 +14,7 @@ from typing import cast
 import structlog
 from structlog.typing import FilteringBoundLogger, Processor
 
-from ai_iop.config import Settings
+from ai_oip.config import Settings
 
 _configured = False
 

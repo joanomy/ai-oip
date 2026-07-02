@@ -1,7 +1,7 @@
 """Base repository interface.
 
 This is the only layer in the application permitted to import from
-`ai_iop.models` and hold a database session. Services and pipelines
+`ai_oip.models` and hold a database session. Services and pipelines
 depend on repositories through this interface; agents never do.
 """
 

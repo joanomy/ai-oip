@@ -45,6 +45,6 @@ class BaseAgent[InputSchema: BaseModel, OutputSchema: BaseModel](ABC):
         Raises:
             AgentExecutionError: On any failure during execution. Agents
                 must not raise raw/unhandled exceptions — see
-                `ai_iop.core.exceptions`.
+                `ai_oip.core.exceptions`.
         """
         raise NotImplementedError  # pragma: no cover

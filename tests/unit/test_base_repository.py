@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ai_iop.repositories.base import BaseRepository
+from ai_oip.repositories.base import BaseRepository
 
 
 @dataclass

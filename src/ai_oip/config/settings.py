@@ -7,7 +7,7 @@ Every other module receives configuration values as explicit function
 or constructor arguments, never by reaching into `os.environ` itself.
 
 Usage:
-    from ai_iop.config import get_settings
+    from ai_oip.config import get_settings
 
     settings = get_settings()
     if settings.is_production:
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
         description="Deployment environment. Drives environment-specific defaults.",
     )
     app_name: str = Field(
-        default="AI-IOP",
+        default="AI-OIP",
         description="Human-readable application name, used in logs and health checks.",
     )
     app_version: str = Field(
@@ -70,6 +70,14 @@ class Settings(BaseSettings):
         default=False,
         description="Enables verbose/debug behavior. Must be False in production.",
     )
+    database_url: str = Field(
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/ai_oip_dev",
+        description=(
+            "Async SQLAlchemy connection string. Must use the asyncpg "
+            "driver — the platform standardizes on async DB access "
+            "throughout (agents, services, and pipelines are async)."
+        ),
+    )
 
     @property
     def is_production(self) -> bool:
@@ -80,6 +88,23 @@ class Settings(BaseSettings):
     def is_development(self) -> bool:
         """True if running in the development environment."""
         return self.environment is Environment.DEVELOPMENT
+
+    @model_validator(mode="after")
+    def _require_async_driver(self) -> "Settings":
+        """Fail startup if database_url doesn't use the async driver.
+
+        A sync driver (plain `postgresql://`) would silently block the
+        event loop the first time a repository issues a query — a
+        surprising, hard-to-diagnose failure mode. Rejected at startup
+        instead.
+        """
+        if not self.database_url.startswith("postgresql+asyncpg://"):
+            raise ValueError(
+                "database_url must use the asyncpg driver "
+                "(postgresql+asyncpg://...), got: "
+                f"{self.database_url.split('://')[0]}://..."
+            )
+        return self
 
     @model_validator(mode="after")
     def _forbid_debug_in_production(self) -> "Settings":

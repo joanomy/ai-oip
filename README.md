@@ -1,11 +1,11 @@
-# AI-IOP
+# AI-OIP
 
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Milestone 3 (Logging & Observability) complete. Structured
-logging via `ai_iop.logging.get_logger()`, environment-aware rendering.
-No concrete agents, database, or business logic exist yet.
+**Status:** Milestone 4 (Database Layer) complete. Async SQLAlchemy +
+Alembic, generic `SQLAlchemyRepository` proven against a real (SQLite)
+database. No concrete business models or agents exist yet.
 
 ## Setup
 
@@ -32,18 +32,20 @@ uv run mypy src                  # type check
 uv run lint-imports               # verify architecture boundaries
 uv run pytest                    # test with coverage
 uv run pre-commit run --all-files  # run all hooks manually
+uv run alembic revision --autogenerate -m "message"  # generate a migration
+uv run alembic upgrade head      # apply migrations
 ```
 
 ## Architecture
 
-AI-IOP is a **modular monolith**: one repository, one deployment, but
+AI-OIP is a **modular monolith**: one repository, one deployment, but
 internally split into layers with enforced, one-directional dependencies.
 `import-linter` fails CI if a lower layer imports a higher one (see
 `pyproject.toml` `[tool.importlinter]` and `docs/architecture/ADR-0002`,
 `ADR-0004` for why the layer order looks the way it does).
 
 ```
-src/ai_iop/
+src/ai_oip/
 ├── pipelines/      # orchestrates services into end-to-end workflows
 ├── services/       # business logic; the only layer that knows both
 │                     agents and repositories
@@ -73,8 +75,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M1 — Project Architecture & Folder Structure | ✅ Complete |
 | M2 — Configuration Management | ✅ Complete |
 | M3 — Logging & Observability | ✅ Complete |
-| M4 — Database Layer | ⏳ Next |
-| M5 — Prompt Management | Not started |
+| M4 — Database Layer | ✅ Complete |
+| M5 — Prompt Management | ⏳ Next |
 | M6 — Agent Framework Core | Not started |
 | M7 — Inter-Module Communication | Not started |
 | M8 — Testing Framework | Not started |

@@ -8,8 +8,8 @@ level filtering, rendering, and structured field propagation.
 import structlog
 import structlog.testing
 
-from ai_iop.config import Environment, Settings
-from ai_iop.logging import configure_logging, get_logger, is_configured, reset_logging
+from ai_oip.config import Environment, Settings
+from ai_oip.logging import configure_logging, get_logger, is_configured, reset_logging
 
 
 def test_configure_logging_sets_configured_flag() -> None:

@@ -8,7 +8,7 @@ with typed input/output.
 import pytest
 from pydantic import BaseModel
 
-from ai_iop.agents.base import BaseAgent
+from ai_oip.agents.base import BaseAgent
 
 
 class _EchoInput(BaseModel):

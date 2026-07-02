@@ -11,13 +11,13 @@ fixed — and, critically, enforced by tooling rather than left as a
 convention that erodes as the codebase grows.
 
 Separately, the project was renamed twice during this milestone:
-`ai_platform` → `ai_os` → `ai_iop` (AI Opportunity Intelligence Platform).
+`ai_platform` → `ai_os` → `ai_oip` (AI Opportunity Intelligence Platform).
 Recorded here so the history is traceable from the ADR log rather than
 only from git commit messages.
 
 ## Decisions
 
-### 1. Package name: `ai_iop`
+### 1. Package name: `ai_oip`
 Final name reflects the product identity: **AI Opportunity Intelligence
 Platform**. Renaming twice this early (before any consumer code exists)
 cost a mechanical rename pass; renaming after M4+ would have cost a
@@ -68,7 +68,7 @@ shape without a database migration later.
 
 ## Consequences
 - Every future PR must pass `lint-imports` in addition to ruff/mypy/pytest.
-- Adding a new package to `src/ai_iop/` requires adding it to the
+- Adding a new package to `src/ai_oip/` requires adding it to the
   `layers` list in `pyproject.toml`, or import-linter will not know
   where it belongs in the hierarchy (fails safe: unrecognized modules
   are simply not covered by the layer contract, so this should be done

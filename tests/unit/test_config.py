@@ -8,7 +8,7 @@ behavior.
 import pytest
 from pydantic import ValidationError
 
-from ai_iop.config import Environment, Settings, get_settings
+from ai_oip.config import Environment, Settings, get_settings
 
 
 def test_defaults_are_safe_for_local_development() -> None:
@@ -66,3 +66,23 @@ def test_get_settings_cache_clear_allows_reload(monkeypatch: pytest.MonkeyPatch)
 
     assert first is not second
     assert second.app_name == "Reloaded-Name"
+
+
+def test_database_url_defaults_to_asyncpg_driver() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.database_url.startswith("postgresql+asyncpg://")
+
+
+def test_database_url_rejects_sync_driver() -> None:
+    with pytest.raises(ValidationError, match="asyncpg driver"):
+        Settings(_env_file=None, database_url="postgresql://user:pass@localhost/db")
+
+
+def test_database_url_accepts_valid_asyncpg_url() -> None:
+    settings = Settings(
+        _env_file=None,
+        database_url="postgresql+asyncpg://user:pass@db.example.com:5432/prod",
+    )
+
+    assert settings.database_url == "postgresql+asyncpg://user:pass@db.example.com:5432/prod"
