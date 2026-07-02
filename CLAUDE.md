@@ -220,8 +220,8 @@ AI-first software company for years to come.
 | M0 -- Vision & Engineering Foundation | Complete |
 | M1 -- Development Environment | Complete |
 | M2 -- AI Runtime Foundation | Complete |
-| M3 -- Agent Framework & Evaluation Harness | Not started (BaseAgent interface exists) |
-| M4 -- Prompt Management | Next (on hold per CEO) |
+| M3 -- Agent Framework & Evaluation Harness | Next (BaseAgent interface exists) |
+| M4 -- Prompt Management | Complete |
 | M5 -- Configuration | Complete |
 | M6 -- Database Layer | Complete |
 | M7 -- Collector Framework | Not started |
@@ -238,19 +238,29 @@ AI-first software company for years to come.
 | MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
 **Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M4 -> M3 -> M7 -> M8..M15 in sequence ->
-MX.1 -> MX.2 -> MX.3. Prompts (M4) come before the agent framework
-(M3) because every agent's contract requires its prompt to exist as a
-versioned, external template — building agents first would force
-placeholder prompts that violate that contract from day one. M8
+Recommended remaining order: M3 -> M7 -> M8..M15 in sequence ->
+MX.1 -> MX.2 -> MX.3. Prompts (M4, complete) came before the agent
+framework (M3) because every agent's contract requires its prompt to
+exist as a versioned, external template — building agents first would
+have forced placeholder prompts that violate that contract from day
+one. M8
 delivers the first end-to-end product output; every later milestone
 extends a working pipeline, each gated on its eval suite.
 
-**Eval discipline (ADR-0006).** M4's deliverables include eval
-fixtures per prompt (golden inputs / expected-property outputs); M3
-delivers the eval runner that consumes them. From M8 onward, "no
-concrete agent ships without an eval suite" is a quality gate with
-the same standing as the coverage floor.
+**Eval discipline (ADR-0006).** Every prompt ships with eval fixtures
+(golden inputs / expected-property outputs) — required and enforced by
+the prompt loader since M4; M3 delivers the eval runner that consumes
+them. From M8 onward, "no concrete agent ships without an eval suite"
+is a quality gate with the same standing as the coverage floor.
+
+**Prompt management detail (M4, complete):** Markdown templates with
+YAML frontmatter (name, version, outcome, role, objective,
+input/output schema names, validation rules) + Jinja2 body, one
+directory per prompt, one file per version, `evals/cases.yaml`
+required alongside. Loaded via `PromptLoader`
+(`src/ai_oip/prompts/loader.py`); production templates live in
+`src/ai_oip/prompts/templates/` (empty until M8+ — business prompts
+arrive with their agents). See ADR-0007.
 
 **Legacy numbering (pre-2026-07-02).** ADRs, git commit messages, and
 in-code history predate this renumbering and use the original scheme.
@@ -288,7 +298,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0006`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0007`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 

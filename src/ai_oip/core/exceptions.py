@@ -26,5 +26,23 @@ class RepositoryError(AIOIPError):
     """Raised when a data access operation fails."""
 
 
+class PromptError(AIOIPError):
+    """Raised when a prompt template is malformed or fails validation."""
+
+
+class PromptNotFoundError(PromptError):
+    """Raised when a prompt, version, or its eval fixtures don't exist."""
+
+
+class PromptRenderError(PromptError):
+    """Raised when rendering is attempted with wrong variables.
+
+    Missing and unexpected variables are both errors — a prompt silently
+    rendering without a variable it declares (or ignoring one it wasn't
+    written for) is exactly the kind of quiet drift that produces bad
+    agent output with no traceable cause.
+    """
+
+
 class ConfigurationError(AIOIPError):
     """Raised when required configuration is missing or invalid."""

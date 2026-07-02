@@ -1,0 +1,16 @@
+# Eval fixtures for demo_greeting (see ADR-0006 / ADR-0007).
+# `expected` semantics are enforced by the evaluation runner (Agent
+# Framework & Evaluation Harness milestone); at this milestone the
+# loader guarantees the fixtures parse and their variables render.
+- id: basic_greeting
+  variables:
+    person_name: Ada
+    tone: warm
+  expected:
+    contains: Ada
+- id: formal_tone
+  variables:
+    person_name: Grace
+    tone: formal
+  expected:
+    contains: Grace

@@ -4,10 +4,10 @@ Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
 **Status:** Engineering foundation complete — vision, dev environment,
-runtime foundation, configuration, and database layer (M0–M2, M5–M6).
-Next up: M4 Prompt Management, then the agent framework and the
-business agent pipeline (M8–M15). No concrete business models or
-agents exist yet.
+runtime foundation, prompt management, configuration, and database
+layer (M0–M2, M4–M6). Next up: M3 Agent Framework & Evaluation
+Harness, then the business agent pipeline (M8–M15). No concrete
+business models or agents exist yet.
 
 ## Setup
 
@@ -76,8 +76,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M0 — Vision & Engineering Foundation | ✅ Complete |
 | M1 — Development Environment | ✅ Complete |
 | M2 — AI Runtime Foundation | ✅ Complete |
-| M3 — Agent Framework & Evaluation Harness | Not started |
-| M4 — Prompt Management | ⏳ Next |
+| M3 — Agent Framework & Evaluation Harness | ⏳ Next |
+| M4 — Prompt Management | ✅ Complete |
 | M5 — Configuration | ✅ Complete |
 | M6 — Database Layer | ✅ Complete |
 | M7 — Collector Framework | Not started |
