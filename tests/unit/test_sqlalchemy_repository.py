@@ -1,9 +1,9 @@
-"""Tests for SQLAlchemyRepository (Milestone 4).
+"""Tests for SQLAlchemyRepository.
 
 These run against a real (in-memory SQLite) database via the
 `db_session` fixture — not mocks — proving the repository pattern
-established in M1 actually works against a real ORM/database, not
-just the abstract interface.
+established with the architecture foundation actually works against
+a real ORM/database, not just the abstract interface.
 """
 
 from uuid import uuid4

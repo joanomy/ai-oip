@@ -12,10 +12,10 @@ from uuid import UUID
 class BaseRepository[Entity](ABC):
     """Abstract base class all repositories must inherit from.
 
-    Concrete repositories (Milestone 4) implement these against a real
-    SQLAlchemy async session. This interface exists now so that
-    `services/` can be written and tested against a fake/in-memory
-    repository before the real database layer exists.
+    Concrete repositories (see `SQLAlchemyRepository`) implement these
+    against a real SQLAlchemy async session. This interface exists so
+    that `services/` can be written and tested against a fake/in-memory
+    repository without touching a real database.
     """
 
     @abstractmethod

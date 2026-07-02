@@ -1,4 +1,4 @@
-"""Tests for the shared declarative Base and mixins (Milestone 4)."""
+"""Tests for the shared declarative Base and mixins."""
 
 import uuid
 

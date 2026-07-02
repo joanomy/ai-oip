@@ -22,7 +22,7 @@ class BaseAgent[InputSchema: BaseModel, OutputSchema: BaseModel](ABC):
     Contract:
         - Exactly one responsibility per agent.
         - Exactly one prompt per agent (loaded via the prompts module,
-          never inlined — enforced at Milestone 5).
+          never inlined — enforced once prompt management exists).
         - `run` is the only public entrypoint. No other public methods.
         - Agents do not import from `repositories/`. If data is needed,
           it arrives as part of `InputSchema`.

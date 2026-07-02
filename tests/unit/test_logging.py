@@ -1,4 +1,4 @@
-"""Unit tests for structured logging (Milestone 3).
+"""Unit tests for structured logging.
 
 Uses structlog's own testing utilities (`capture_logs`) rather than
 mocking, so these tests exercise the real configured pipeline —

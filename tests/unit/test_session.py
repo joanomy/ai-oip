@@ -1,4 +1,4 @@
-"""Tests for database session/engine management (Milestone 4)."""
+"""Tests for database session/engine management."""
 
 import pytest
 from sqlalchemy import select

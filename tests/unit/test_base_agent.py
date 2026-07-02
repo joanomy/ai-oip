@@ -1,4 +1,4 @@
-"""Unit tests for the BaseAgent contract (Milestone 1).
+"""Unit tests for the BaseAgent contract.
 
 Uses a minimal dummy agent to prove the abstract interface behaves as
 intended: cannot be instantiated directly, and a valid subclass runs

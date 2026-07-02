@@ -3,7 +3,8 @@
 Exists solely to exercise `SQLAlchemyRepository` against a real
 database engine in tests. This is not a business entity — no real
 domain model should be added here or copied from here; it demonstrates
-the *pattern* a real model + repository will follow from M6 onward.
+the *pattern* every real model + repository will follow once concrete
+business models exist.
 """
 
 from sqlalchemy.orm import Mapped, mapped_column

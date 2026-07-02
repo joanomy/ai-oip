@@ -3,9 +3,11 @@
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Milestone 4 (Database Layer) complete. Async SQLAlchemy +
-Alembic, generic `SQLAlchemyRepository` proven against a real (SQLite)
-database. No concrete business models or agents exist yet.
+**Status:** Engineering foundation complete — vision, dev environment,
+runtime foundation, configuration, and database layer (M0–M2, M5–M6).
+Next up: M4 Prompt Management, then the agent framework and the
+business agent pipeline (M8–M15). No concrete business models or
+agents exist yet.
 
 ## Setup
 
@@ -71,16 +73,34 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 
 | Milestone | Status |
 |---|---|
-| M0 — Environment & Repo Bootstrap | ✅ Complete |
-| M1 — Project Architecture & Folder Structure | ✅ Complete |
-| M2 — Configuration Management | ✅ Complete |
-| M3 — Logging & Observability | ✅ Complete |
-| M4 — Database Layer | ✅ Complete |
-| M5 — Prompt Management | ⏳ Next |
-| M6 — Agent Framework Core | Not started |
-| M7 — Inter-Module Communication | Not started |
-| M8 — Testing Framework | Not started |
-| M9 — Dockerization | Not started |
-| M10 — CI/CD Readiness | Not started |
-| M11 — Monitoring & Health Checks | Not started |
-| M12 — Documentation System | Ongoing |
+| M0 — Vision & Engineering Foundation | ✅ Complete |
+| M1 — Development Environment | ✅ Complete |
+| M2 — AI Runtime Foundation | ✅ Complete |
+| M3 — Agent Framework & Evaluation Harness | Not started |
+| M4 — Prompt Management | ⏳ Next |
+| M5 — Configuration | ✅ Complete |
+| M6 — Database Layer | ✅ Complete |
+| M7 — Collector Framework | Not started |
+| M8 — Walking Skeleton (Problem Extraction + thin E2E report) | Not started |
+| M9 — Workflow Discovery Agent | Not started |
+| M10 — Opportunity Scoring | Not started |
+| M11 — Competition Research | Not started |
+| M12 — Product Recommendation | Not started |
+| M13 — ICP Generator | Not started |
+| M14 — Company Discovery | Not started |
+| M15 — Executive Report v2 | Not started |
+| MX.1 — Scheduled Runs, Human-in-the-Loop | Not started |
+| MX.2 — Human-on-the-Loop (exception review) | Not started |
+| MX.3 — Bounded Autonomy (budgets, guardrails, escalation) | Not started |
+
+Execution order is dependency-driven, not strictly numeric (prompts
+before agents: M4 → M3 → M7 → M8…M15 → MX.1 → MX.2 → MX.3, staged
+autonomy). M8 delivers the first end-to-end output; every later
+milestone extends a working pipeline, gated on its eval suite
+(ADR-0006). Testing, Docker/CI hardening, and monitoring are
+cross-cutting tracks rather than numbered milestones — see
+`CLAUDE.md` for details.
+
+> **Note:** the roadmap was renumbered on 2026-07-02. ADRs and older
+> commit messages use the previous numbering — the old↔new mapping
+> lives in `CLAUDE.md` under "Legacy numbering".

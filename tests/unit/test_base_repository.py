@@ -1,9 +1,8 @@
-"""Unit tests for the BaseRepository contract (Milestone 1).
+"""Unit tests for the BaseRepository contract.
 
 Uses a minimal in-memory dummy repository to prove the abstract
 interface is implementable and behaves as intended. This same pattern
-is what `services/` tests will use to avoid depending on a real
-database until Milestone 4 exists.
+is what `services/` tests use to avoid depending on a real database.
 """
 
 from dataclasses import dataclass

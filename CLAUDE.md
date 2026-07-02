@@ -213,35 +213,82 @@ AI-first software company for years to come.
 
 # PART 2 -- PROJECT STATE (AI-OIP)
 
-## Current Milestone Status
+## Current Milestone Status (roadmap v3: renumbered + research-adjusted 2026-07-02, see ADR-0006)
 
 | Milestone | Status |
 |---|---|
-| M0 -- Environment & Repo Bootstrap | Complete |
-| M1 -- Project Architecture & Folder Structure | Complete |
-| M2 -- Configuration Management | Complete |
-| M3 -- Logging & Observability | Complete |
-| M4 -- Database Layer | Complete |
-| M5 -- Prompt Management | Next |
-| M6 -- Agent Framework Core | Not started |
-| M7 -- Inter-Module Communication | Not started |
-| M8 -- Testing Framework | Not started |
-| M9 -- Dockerization | Not started |
-| M10 -- CI/CD Readiness | Not started |
-| M11 -- Monitoring & Health Checks | Not started |
-| M12 -- Documentation System | Ongoing |
+| M0 -- Vision & Engineering Foundation | Complete |
+| M1 -- Development Environment | Complete |
+| M2 -- AI Runtime Foundation | Complete |
+| M3 -- Agent Framework & Evaluation Harness | Not started (BaseAgent interface exists) |
+| M4 -- Prompt Management | Next (on hold per CEO) |
+| M5 -- Configuration | Complete |
+| M6 -- Database Layer | Complete |
+| M7 -- Collector Framework | Not started |
+| M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Not started |
+| M9 -- Workflow Discovery Agent | Not started |
+| M10 -- Opportunity Scoring | Not started |
+| M11 -- Competition Research | Not started |
+| M12 -- Product Recommendation | Not started |
+| M13 -- ICP Generator | Not started |
+| M14 -- Company Discovery | Not started |
+| M15 -- Executive Report v2 | Not started |
+| MX.1 -- Scheduled Runs, Human-in-the-Loop | Not started |
+| MX.2 -- Human-on-the-Loop (exception review) | Not started |
+| MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
-**M4 detail:** async SQLAlchemy + Alembic + generic `SQLAlchemyRepository`
-implemented, committed, and passing (39 tests, 100% coverage, all quality
-gates green) under package name `ai_oip` (renamed three times:
-`ai_platform` -> `ai_os` -> `ai_iop` -> `ai_oip`; the last rename,
-correcting acronym letter order to match "Opportunity Intelligence
-Platform" word order, happened during M4 — see ADR-0005. Verified
-against git history during the post-M4 engineering review; ADR-0002
-originally misstated this sequence and has a correction note).
+**Execution order is dependency-driven, not strictly numeric.**
+Recommended remaining order: M4 -> M3 -> M7 -> M8..M15 in sequence ->
+MX.1 -> MX.2 -> MX.3. Prompts (M4) come before the agent framework
+(M3) because every agent's contract requires its prompt to exist as a
+versioned, external template — building agents first would force
+placeholder prompts that violate that contract from day one. M8
+delivers the first end-to-end product output; every later milestone
+extends a working pipeline, each gated on its eval suite.
+
+**Eval discipline (ADR-0006).** M4's deliverables include eval
+fixtures per prompt (golden inputs / expected-property outputs); M3
+delivers the eval runner that consumes them. From M8 onward, "no
+concrete agent ships without an eval suite" is a quality gate with
+the same standing as the coverage floor.
+
+**Legacy numbering (pre-2026-07-02).** ADRs, git commit messages, and
+in-code history predate this renumbering and use the original scheme.
+Mapping: old M0 (Bootstrap) -> new M1; old M1 (Architecture) -> new
+M2; old M2 (Configuration) -> new M5; old M3 (Logging) -> folded into
+new M2; old M4 (Database) -> new M6; old M5 (Prompts) -> new M4; old
+M6 (Agent Framework) -> new M3. Old M7-M12 (Inter-Module
+Communication, Testing, Dockerization, CI/CD, Monitoring,
+Documentation) have no dedicated slots -- see cross-cutting tracks
+below. ADRs are historical records: do NOT renumber milestone
+references inside them; interpret them via this mapping.
+
+**Cross-cutting tracks (no dedicated milestone -- deliberate).**
+- Testing: enforced continuously by the quality gate (90% coverage
+  floor), not a phase.
+- Dockerization, CI/CD hardening, real-Postgres integration tests:
+  recommended to land alongside M7 (Collector Framework), before the
+  platform talks to real external services. Until then ADR-0005's
+  SQLite-only trade-off stands.
+- Monitoring & health checks: `monitoring/` package is scaffolded;
+  build out as prerequisites for the MX.1-MX.3 autonomy stages.
+- Documentation: ongoing -- one ADR per decision, this file as the
+  durable state of truth.
+- Inter-module communication (events/queues): deferred to Phase 2 of
+  the architecture evolution strategy, likely alongside the MX stages.
+
+**Database layer detail (legacy M4, now M6):** async SQLAlchemy +
+Alembic + generic `SQLAlchemyRepository` committed and passing (46
+tests, 100% coverage, all quality gates green) under package name
+`ai_oip` (renamed three times: `ai_platform` -> `ai_os` -> `ai_iop` ->
+`ai_oip`; the last rename, correcting acronym letter order to match
+"Opportunity Intelligence Platform" word order, happened during the
+database-layer milestone — see ADR-0005. Verified against git history
+during the post-database-layer engineering review; ADR-0002 originally
+misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0005`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0006`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 
@@ -275,7 +322,8 @@ just get flagged. Three contracts currently active: the full layered
 order; "agents never import repositories or models"; and "only
 repositories access the database layer" (services/pipelines/collectors
 may not import models -- see ADR-0002 addendum, including the open
-composition-root question deferred to M6/M7).
+composition-root question deferred to M3, Agent Framework, when the
+first application entrypoint is built).
 
 ## Tech Stack
 
@@ -308,10 +356,13 @@ All five must pass.
 - Tests run against SQLite (`aiosqlite`), not a live Postgres. Exercises
   the same SQLAlchemy code paths but not Postgres-specific behavior
   (JSONB, locking semantics). Real Postgres integration testing deferred
-  to M9 (Dockerization), where CI gets a real Postgres service container.
+  to the Docker/CI cross-cutting track (recommended alongside M7,
+  Collector Framework), when CI gets a real Postgres service container.
 - No secrets management yet -- plain env vars via `Settings`. Revisit when
-  the first real API key is added (expected M6).
+  the first real API key is added (expected M3, Agent Framework &
+  Evaluation Harness).
 - `import-linter` layer contract needs a manual update whenever a new
   top-level package is added under `src/ai_oip/` -- it fails
   silently-permissive (unlisted modules aren't checked), not
-  silently-strict. Check this deliberately at M6/M7.
+  silently-strict. Check this deliberately at M3 and M7, the next
+  milestones likely to add packages.

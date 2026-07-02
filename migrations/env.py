@@ -29,9 +29,9 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Every ORM model must be imported somewhere before this line runs, or
-# Alembic's autogenerate won't see it. Concrete models (added from M5+
-# onward) should be imported in ai_oip.models.__init__ so this stays
-# correct without editing this file per new model.
+# Alembic's autogenerate won't see it. Concrete models (added as
+# business milestones land) should be imported in ai_oip.models.__init__
+# so this stays correct without editing this file per new model.
 target_metadata = Base.metadata
 
 

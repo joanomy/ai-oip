@@ -1,4 +1,4 @@
-"""Unit tests for typed application settings (Milestone 2).
+"""Unit tests for typed application settings.
 
 Covers: defaults, environment variable overrides, fail-fast validation
 on bad input, the production+debug guard, and get_settings() caching

@@ -1,7 +1,7 @@
-"""AI Platform: production-grade autonomous AI agent runtime.
+"""AI-OIP: production-grade autonomous AI agent runtime.
 
-This package is intentionally near-empty at bootstrap stage (Milestone 0).
-Architecture and module boundaries are introduced in Milestone 1.
+This package root is intentionally near-empty. Architecture and module
+boundaries live in the subpackages — see CLAUDE.md and ADR-0002.
 """
 
 __version__ = "0.0.1"
