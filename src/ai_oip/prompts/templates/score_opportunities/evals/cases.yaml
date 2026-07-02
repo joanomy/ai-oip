@@ -1,0 +1,21 @@
+# Eval fixtures for score_opportunities (ADR-0006/0007/0008).
+- id: invoice_workflow_scoring
+  variables:
+    workflows_digest: |
+      [1] Vendor invoice data entry — Manually transferring invoice data
+          from vendor PDFs into the accounting system.
+          Steps: Open vendor PDF; Re-key fields; Reconcile totals
+          Actors: Bookkeeper
+          Linked problems: 2
+  expected:
+    contains: "scores"
+- id: thin_evidence_workflow
+  variables:
+    workflows_digest: |
+      [1] Weekly status reporting — Assembling a status update from
+          scattered tools.
+          Steps: Collect updates; Paste into doc
+          Actors: Team lead
+          Linked problems: 1
+  expected:
+    contains: "scores"

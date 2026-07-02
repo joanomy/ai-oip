@@ -227,8 +227,8 @@ AI-first software company for years to come.
 | M7 -- Collector Framework | Complete |
 | M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Complete |
 | M9 -- Workflow Discovery Agent | Complete |
-| M10 -- Opportunity Scoring | Next |
-| M11 -- Competition Research | Not started |
+| M10 -- Opportunity Scoring | Complete |
+| M11 -- Competition Research | Next |
 | M12 -- Product Recommendation | Not started |
 | M13 -- ICP Generator | Not started |
 | M14 -- Company Discovery | Not started |
@@ -238,12 +238,12 @@ AI-first software company for years to come.
 | MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
 **Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M10..M15 in sequence ->
-MX.1 -> MX.2 -> MX.3. The pipeline is two stages deep with persisted
-handoffs: `ai-oip-skeleton "<query>"` (collect -> extract problems ->
-persist -> report) then `ai-oip-workflows` (stored problems ->
-workflows -> persist -> report). Every remaining milestone extends
-this working pipeline, each gated on its eval suite.
+Recommended remaining order: M11..M15 in sequence ->
+MX.1 -> MX.2 -> MX.3. The pipeline is three stages deep with persisted
+handoffs, driven by the unified CLI: `ai-oip discover "<query>"`
+(collect -> problems), `ai-oip workflows` (problems -> workflows),
+`ai-oip score` (workflows -> ranked opportunities). Every remaining
+milestone extends this working pipeline, each gated on its eval suite.
 
 **Eval discipline (ADR-0006).** Every prompt ships with eval fixtures
 (golden inputs / expected-property outputs) — required and enforced by
@@ -251,6 +251,18 @@ the prompt loader since M4; the eval runner (`evals/`, M3) consumes
 them with contains / not_contains / matches semantics (ADR-0008). From
 M8 onward, "no concrete agent ships without an eval suite" is a
 quality gate with the same standing as the coverage floor.
+
+**Opportunity scoring detail (M10, complete):** the LLM judges, the
+code computes — `score_opportunities` v1 scores five typed dimensions
+(pain_intensity .25, automation_feasibility .25, frequency .20,
+market_breadth .20, willingness_to_pay .10) with rationales; the
+deterministic weighted 10-100 total lives in
+`services/opportunity_scoring.py` (weights are a constructor arg, not
+a prompt concern). `OpportunityScoreRecord` + migration 0003. Unified
+CLI landed (`ai-oip` with discover/workflows/score subcommands);
+legacy scripts remain as aliases. Invalid workflow_index drops the
+score (a judgment with nothing to attach to is meaningless). See
+ADR-0012.
 
 **Workflow discovery detail (M9, complete):** second agent stamped
 from the M8 recipe — `discover_workflows` v1 prompt (+ fixtures),
@@ -341,7 +353,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0011`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0012`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 

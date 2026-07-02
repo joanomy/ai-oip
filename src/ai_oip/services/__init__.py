@@ -12,13 +12,26 @@ Dependency rule: depends on collectors, agents, repositories, schemas,
 logging, core. NEVER on models.
 """
 
+from ai_oip.services.opportunity_scoring import (
+    DEFAULT_WEIGHTS,
+    OpportunityScoringService,
+    weighted_total,
+)
 from ai_oip.services.problem_discovery import ProblemDiscoveryService
-from ai_oip.services.report import render_markdown_report, render_workflow_report
+from ai_oip.services.report import (
+    render_markdown_report,
+    render_opportunity_report,
+    render_workflow_report,
+)
 from ai_oip.services.workflow_discovery import WorkflowDiscoveryService
 
 __all__ = [
+    "DEFAULT_WEIGHTS",
+    "OpportunityScoringService",
     "ProblemDiscoveryService",
     "WorkflowDiscoveryService",
     "render_markdown_report",
+    "render_opportunity_report",
     "render_workflow_report",
+    "weighted_total",
 ]

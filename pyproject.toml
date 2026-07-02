@@ -31,6 +31,7 @@ dev = [
 ]
 
 [project.scripts]
+ai-oip = "ai_oip.runtime.cli:main"
 ai-oip-skeleton = "ai_oip.runtime.skeleton:main"
 ai-oip-workflows = "ai_oip.runtime.workflows:main"
 
