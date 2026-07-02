@@ -21,7 +21,9 @@ ENV UV_COMPILE_BYTECODE=1 \
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-# Project layer.
+# Project layer. README.md is required: pyproject declares it as the
+# package readme, so the hatchling build fails without it.
+COPY README.md ./
 COPY src ./src
 COPY alembic.ini ./
 COPY migrations ./migrations
