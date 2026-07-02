@@ -57,6 +57,15 @@ class ProviderError(AIOIPError):
     """
 
 
+class CollectorError(AIOIPError):
+    """Raised when external data collection fails (network, API, bad payload).
+
+    Collection failures are usually transient and source-specific —
+    keeping them distinct lets pipelines retry or skip a source without
+    conflating it with agent or persistence failures.
+    """
+
+
 class EvalError(AIOIPError):
     """Raised when an eval fixture is malformed or uses unknown expectation types.
 

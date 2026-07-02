@@ -6,3 +6,7 @@ data crossing a module boundary. Never used for database persistence
 
 Dependency rule: depends only on core.
 """
+
+from ai_oip.schemas.collected_item import CollectedItem
+
+__all__ = ["CollectedItem"]
