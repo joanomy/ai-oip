@@ -13,6 +13,12 @@ logging, core. NEVER on models.
 """
 
 from ai_oip.services.problem_discovery import ProblemDiscoveryService
-from ai_oip.services.report import render_markdown_report
+from ai_oip.services.report import render_markdown_report, render_workflow_report
+from ai_oip.services.workflow_discovery import WorkflowDiscoveryService
 
-__all__ = ["ProblemDiscoveryService", "render_markdown_report"]
+__all__ = [
+    "ProblemDiscoveryService",
+    "WorkflowDiscoveryService",
+    "render_markdown_report",
+    "render_workflow_report",
+]

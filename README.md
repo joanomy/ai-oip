@@ -3,12 +3,12 @@
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Platform (M0–M7) and walking skeleton (M8) complete. The
-first end-to-end slice runs: collect from Hacker News → extract
-problems (first concrete agent, `extract_problems` prompt v1) →
-persist to Postgres → markdown report, triggered via
-`ai-oip-skeleton "<query>"`. Next up: M9 Workflow Discovery Agent,
-extending the working pipeline.
+**Status:** Platform (M0–M7) plus the first two pipeline stages (M8,
+M9) complete. `ai-oip-skeleton "<query>"` collects Hacker News signal
+and extracts problems; `ai-oip-workflows` reads stored problems and
+discovers the business workflows behind them — both persisting to
+Postgres and emitting markdown reports. Next up: M10 Opportunity
+Scoring.
 
 ## Setup
 
@@ -53,6 +53,7 @@ docker compose up -d postgres
 uv run alembic upgrade head            # DATABASE_URL must point at your Postgres
 ANTHROPIC_API_KEY=sk-ant-...           # set in .env
 uv run ai-oip-skeleton "automation pain" --limit 10 --output report.md
+uv run ai-oip-workflows --limit 50 --output workflows.md   # stage 2: workflows behind stored problems
 ```
 
 ## Architecture
@@ -102,8 +103,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M6 — Database Layer | ✅ Complete |
 | M7 — Collector Framework | ✅ Complete |
 | M8 — Walking Skeleton (Problem Extraction + thin E2E report) | ✅ Complete |
-| M9 — Workflow Discovery Agent | ⏳ Next |
-| M10 — Opportunity Scoring | Not started |
+| M9 — Workflow Discovery Agent | ✅ Complete |
+| M10 — Opportunity Scoring | ⏳ Next |
 | M11 — Competition Research | Not started |
 | M12 — Product Recommendation | Not started |
 | M13 — ICP Generator | Not started |

@@ -13,5 +13,11 @@ Dependency rule: depends on models, core.
 from ai_oip.repositories.base import BaseRepository
 from ai_oip.repositories.problem_repository import ProblemRepository
 from ai_oip.repositories.sqlalchemy_repository import SQLAlchemyRepository
+from ai_oip.repositories.workflow_repository import WorkflowRepository
 
-__all__ = ["BaseRepository", "ProblemRepository", "SQLAlchemyRepository"]
+__all__ = [
+    "BaseRepository",
+    "ProblemRepository",
+    "SQLAlchemyRepository",
+    "WorkflowRepository",
+]

@@ -1,0 +1,22 @@
+# Eval fixtures for discover_workflows (ADR-0006/0007/0008).
+# Structural expectations run in CI against a fake provider; the same
+# cases run against the live model manually.
+- id: invoice_entry_workflow
+  variables:
+    problems_digest: |
+      [1] Manual invoice copying eats two hours weekly.
+          Context: Small-business back office
+          Evidence: "I spend every Friday manually copying invoice data"
+      [2] Typos in manually entered invoice data break month-end reconciliation.
+          Context: Accounting
+          Evidence: "one typo means reconciliation fails at month end"
+  expected:
+    contains: "workflows"
+- id: unrelated_problems
+  variables:
+    problems_digest: |
+      [1] Cron jobs fail silently and nobody notices until customers complain.
+          Context: Ops
+          Evidence: "jobs fail silently"
+  expected:
+    contains: "workflows"

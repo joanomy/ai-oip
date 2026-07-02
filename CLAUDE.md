@@ -226,8 +226,8 @@ AI-first software company for years to come.
 | M6 -- Database Layer | Complete |
 | M7 -- Collector Framework | Complete |
 | M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Complete |
-| M9 -- Workflow Discovery Agent | Next |
-| M10 -- Opportunity Scoring | Not started |
+| M9 -- Workflow Discovery Agent | Complete |
+| M10 -- Opportunity Scoring | Next |
 | M11 -- Competition Research | Not started |
 | M12 -- Product Recommendation | Not started |
 | M13 -- ICP Generator | Not started |
@@ -238,12 +238,12 @@ AI-first software company for years to come.
 | MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
 **Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M9..M15 in sequence ->
-MX.1 -> MX.2 -> MX.3. The platform layer (M0-M7) and the walking
-skeleton (M8) are complete: `ai-oip-skeleton "<query>"` runs the first
-end-to-end slice (collect -> extract -> persist -> report). Every
-remaining milestone extends this working pipeline, each gated on its
-eval suite.
+Recommended remaining order: M10..M15 in sequence ->
+MX.1 -> MX.2 -> MX.3. The pipeline is two stages deep with persisted
+handoffs: `ai-oip-skeleton "<query>"` (collect -> extract problems ->
+persist -> report) then `ai-oip-workflows` (stored problems ->
+workflows -> persist -> report). Every remaining milestone extends
+this working pipeline, each gated on its eval suite.
 
 **Eval discipline (ADR-0006).** Every prompt ships with eval fixtures
 (golden inputs / expected-property outputs) — required and enforced by
@@ -251,6 +251,16 @@ the prompt loader since M4; the eval runner (`evals/`, M3) consumes
 them with contains / not_contains / matches semantics (ADR-0008). From
 M8 onward, "no concrete agent ships without an eval suite" is a
 quality gate with the same standing as the coverage floor.
+
+**Workflow discovery detail (M9, complete):** second agent stamped
+from the M8 recipe — `discover_workflows` v1 prompt (+ fixtures),
+`WorkflowDiscoveryAgent`, `WorkflowRecord` + migration 0002 (JSON
+problem_ids list, join table deferred until a query needs it),
+`ProblemRepository.list_details()` (read path returns schemas — the
+ORM now never crosses the repository boundary in either direction),
+`WorkflowDiscoveryService`, `ai-oip-workflows` entrypoint. No
+collected_items table — workflow discovery consumes problems, not raw
+signal (ADR-0011).
 
 **Walking skeleton detail (M8, complete):** first end-to-end slice —
 `extract_problems` v1 prompt (+ eval fixtures), `ProblemExtractionAgent`
@@ -331,7 +341,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0010`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0011`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 

@@ -16,12 +16,14 @@ from ai_oip.models.session import (
     create_session_factory,
     session_scope,
 )
+from ai_oip.models.workflow import WorkflowRecord
 
 __all__ = [
     "Base",
     "ProblemRecord",
     "TimestampMixin",
     "UUIDPrimaryKeyMixin",
+    "WorkflowRecord",
     "create_engine",
     "create_engine_from_settings",
     "create_session_factory",

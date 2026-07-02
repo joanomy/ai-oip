@@ -7,11 +7,13 @@ while still persisting things: they hand over data in motion, the
 repository owns data at rest.
 """
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ai_oip.core.exceptions import RepositoryError
 from ai_oip.models import ProblemRecord
 from ai_oip.repositories.sqlalchemy_repository import SQLAlchemyRepository
-from ai_oip.schemas import CollectedItem, ExtractedProblem
+from ai_oip.schemas import CollectedItem, ExtractedProblem, ProblemDetail
 
 
 class ProblemRepository(SQLAlchemyRepository[ProblemRecord]):
@@ -43,3 +45,27 @@ class ProblemRepository(SQLAlchemyRepository[ProblemRecord]):
             evidence=problem.evidence,
         )
         await self.save(record)
+
+    async def list_details(self, *, limit: int = 50) -> list[ProblemDetail]:
+        """Most recent problems, as data in motion (newest first).
+
+        Returns schemas, not ORM records — the read-path counterpart of
+        `add_extracted`, keeping the ORM inside the repository.
+        """
+        try:
+            result = await self._session.execute(
+                select(ProblemRecord).order_by(ProblemRecord.created_at.desc()).limit(limit)
+            )
+            records = result.scalars().all()
+        except Exception as exc:
+            raise RepositoryError(f"Failed to list problem details: {exc}") from exc
+        return [
+            ProblemDetail(
+                id=record.id,
+                description=record.description,
+                context=record.context,
+                evidence=record.evidence,
+                source=record.source,
+            )
+            for record in records
+        ]

@@ -14,12 +14,26 @@ from ai_oip.schemas.problem_extraction import (
     ProblemExtractionOutput,
 )
 from ai_oip.schemas.report import ProblemFinding, SkeletonReport
+from ai_oip.schemas.workflow_discovery import (
+    DiscoveredWorkflow,
+    ProblemDetail,
+    WorkflowDiscoveryInput,
+    WorkflowDiscoveryOutput,
+    WorkflowReport,
+    WorkflowSummary,
+)
 
 __all__ = [
     "CollectedItem",
+    "DiscoveredWorkflow",
     "ExtractedProblem",
+    "ProblemDetail",
     "ProblemExtractionInput",
     "ProblemExtractionOutput",
     "ProblemFinding",
     "SkeletonReport",
+    "WorkflowDiscoveryInput",
+    "WorkflowDiscoveryOutput",
+    "WorkflowReport",
+    "WorkflowSummary",
 ]
