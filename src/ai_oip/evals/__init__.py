@@ -15,5 +15,12 @@ from ai_oip.evals.runner import (
     EvalTarget,
     run_eval_cases,
 )
+from ai_oip.evals.targets import prompt_completion_target
 
-__all__ = ["EvalCaseResult", "EvalReport", "EvalTarget", "run_eval_cases"]
+__all__ = [
+    "EvalCaseResult",
+    "EvalReport",
+    "EvalTarget",
+    "prompt_completion_target",
+    "run_eval_cases",
+]

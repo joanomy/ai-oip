@@ -1,0 +1,22 @@
+# Eval fixtures for extract_problems (ADR-0006/0007/0008).
+# The structural expectations run in CI against a fake provider (they
+# verify the harness plumbing); the same cases run against the live
+# model manually, where `contains` checks the real output shape.
+- id: clear_automation_pain
+  variables:
+    items_digest: |
+      [1] Ask HN: What tedious task do you wish was automated?
+      URL: https://news.ycombinator.com/item?id=1
+      I spend every Friday afternoon manually copying invoice data from
+      vendor PDFs into our accounting tool. Two hours, every single week,
+      and one typo means reconciliation fails at month end.
+  expected:
+    contains: "problems"
+- id: announcement_with_no_problem
+  variables:
+    items_digest: |
+      [1] Show HN: I made a pixel art editor in a weekend
+      URL: https://example.com/pixel
+      Just wanted to share something fun I built. Feedback welcome!
+  expected:
+    contains: "problems"

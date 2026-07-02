@@ -9,6 +9,7 @@ Dependency rule: depends only on core.
 """
 
 from ai_oip.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from ai_oip.models.problem import ProblemRecord
 from ai_oip.models.session import (
     create_engine,
     create_engine_from_settings,
@@ -18,6 +19,7 @@ from ai_oip.models.session import (
 
 __all__ = [
     "Base",
+    "ProblemRecord",
     "TimestampMixin",
     "UUIDPrimaryKeyMixin",
     "create_engine",

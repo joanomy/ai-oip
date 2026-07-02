@@ -225,8 +225,8 @@ AI-first software company for years to come.
 | M5 -- Configuration | Complete |
 | M6 -- Database Layer | Complete |
 | M7 -- Collector Framework | Complete |
-| M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Next |
-| M9 -- Workflow Discovery Agent | Not started |
+| M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Complete |
+| M9 -- Workflow Discovery Agent | Next |
 | M10 -- Opportunity Scoring | Not started |
 | M11 -- Competition Research | Not started |
 | M12 -- Product Recommendation | Not started |
@@ -238,11 +238,12 @@ AI-first software company for years to come.
 | MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
 **Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M8..M15 in sequence ->
-MX.1 -> MX.2 -> MX.3. The entire platform layer (M0-M7) is complete;
-every remaining milestone is business functionality. M8 delivers the
-first end-to-end product output; every later milestone extends a
-working pipeline, each gated on its eval suite.
+Recommended remaining order: M9..M15 in sequence ->
+MX.1 -> MX.2 -> MX.3. The platform layer (M0-M7) and the walking
+skeleton (M8) are complete: `ai-oip-skeleton "<query>"` runs the first
+end-to-end slice (collect -> extract -> persist -> report). Every
+remaining milestone extends this working pipeline, each gated on its
+eval suite.
 
 **Eval discipline (ADR-0006).** Every prompt ships with eval fixtures
 (golden inputs / expected-property outputs) — required and enforced by
@@ -250,6 +251,19 @@ the prompt loader since M4; the eval runner (`evals/`, M3) consumes
 them with contains / not_contains / matches semantics (ADR-0008). From
 M8 onward, "no concrete agent ships without an eval suite" is a
 quality gate with the same standing as the coverage floor.
+
+**Walking skeleton detail (M8, complete):** first end-to-end slice —
+`extract_problems` v1 prompt (+ eval fixtures), `ProblemExtractionAgent`
+(domain-grouped under `agents/problem_extraction/`), `ProblemRecord` +
+hand-written migration 0001 (CI applies it to real Postgres),
+`ProblemRepository.add_extracted` (schemas in, ORM never leaves the
+repository), `ProblemDiscoveryService`, markdown report, and the
+`runtime/` composition root — THE resolved answer to ADR-0002's open
+question: runtime is the one documented exception allowed to create
+sessions and wire layers (ADR-0010). Entrypoint: `ai-oip-skeleton
+"<query>"` (needs migrated DB + ANTHROPIC_API_KEY). The DB-forbidden
+contract now checks direct imports only (`allow_indirect_imports`) —
+services legitimately reach models *through* repositories.
 
 **Collector framework detail (M7, complete):** `BaseCollector`
 (fetch + normalize only; `CollectorError` wrapping, no persistence, no
@@ -317,7 +331,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0009`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0010`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 
@@ -325,6 +339,8 @@ scratch.
 
 ```
 src/ai_oip/
+├── runtime/        # composition root + entrypoints -- the ONE module
+│                     allowed to create sessions & wire layers (ADR-0010)
 ├── pipelines/      # orchestrates services into end-to-end workflows
 ├── services/       # business logic; only layer that knows both
 │                     agents and repositories
@@ -344,19 +360,19 @@ src/ai_oip/
 ```
 
 Dependency direction (top imports bottom, never the reverse):
-`pipelines -> services -> collectors, evals -> agents -> repositories,
-providers -> models -> schemas, prompts -> logging, monitoring ->
-config -> core`
+`runtime -> pipelines -> services -> collectors, evals -> agents ->
+repositories, providers -> models -> schemas, prompts -> logging,
+monitoring -> config -> core`
 
 Enforced via `import-linter` (`pyproject.toml` `[tool.importlinter]`),
 checked in CI and pre-commit -- a violation fails the build, it doesn't
 just get flagged. Three contracts currently active: the full layered
 order; "agents never import repositories or models"; and "only
 repositories access the database layer"
-(services/pipelines/collectors/providers/evals may not import models --
-see ADR-0002 addendum; the open composition-root question is deferred
-to M7/M8, when the first component composes providers + agents +
-repositories, per ADR-0008 §9).
+(services/pipelines/collectors/providers/evals may not import models
+directly; indirect chains through repositories are allowed by design,
+and `runtime/` is the one documented exception as composition root --
+ADR-0002's open question, resolved at M8 by ADR-0010).
 
 ## Tech Stack
 
@@ -406,6 +422,6 @@ All five must pass.
 - `import-linter` layer contract needs a manual update whenever a new
   top-level package is added under `src/ai_oip/` -- it fails
   silently-permissive (unlisted modules aren't checked), not
-  silently-strict. Done deliberately at M3 (providers, evals added);
-  checked at M7 (no new top-level packages). Re-check whenever one is
-  added.
+  silently-strict. Done deliberately at M3 (providers, evals) and M8
+  (runtime, added at the top of the layers list). Re-check whenever a
+  package is added.

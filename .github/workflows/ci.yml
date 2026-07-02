@@ -56,6 +56,11 @@ jobs:
       - name: Architecture boundaries (import-linter)
         run: uv run lint-imports
 
+      - name: Migrations apply cleanly (alembic upgrade head on real Postgres)
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_oip_test
+        run: uv run alembic upgrade head
+
       - name: Test (pytest — unit + real-Postgres integration; coverage floor from pyproject.toml)
         run: uv run pytest
 

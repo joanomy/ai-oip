@@ -3,12 +3,12 @@
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** The entire platform layer (M0–M7) is complete — foundation,
-prompt management, configuration, database, agent framework &
-evaluation harness, and the collector framework (first source: Hacker
-News) with Docker + real-Postgres CI integration tests. Next up: M8,
-the walking skeleton — the first end-to-end slice (collect → extract
-problems → store → report). No concrete business agents exist yet.
+**Status:** Platform (M0–M7) and walking skeleton (M8) complete. The
+first end-to-end slice runs: collect from Hacker News → extract
+problems (first concrete agent, `extract_problems` prompt v1) →
+persist to Postgres → markdown report, triggered via
+`ai-oip-skeleton "<query>"`. Next up: M9 Workflow Discovery Agent,
+extending the working pipeline.
 
 ## Setup
 
@@ -46,6 +46,15 @@ docker compose up -d postgres
 INTEGRATION_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/ai_oip_test uv run pytest tests/integration
 ```
 
+### Run the walking skeleton (first end-to-end slice)
+
+```bash
+docker compose up -d postgres
+uv run alembic upgrade head            # DATABASE_URL must point at your Postgres
+ANTHROPIC_API_KEY=sk-ant-...           # set in .env
+uv run ai-oip-skeleton "automation pain" --limit 10 --output report.md
+```
+
 ## Architecture
 
 AI-OIP is a **modular monolith**: one repository, one deployment, but
@@ -56,6 +65,7 @@ internally split into layers with enforced, one-directional dependencies.
 
 ```
 src/ai_oip/
+├── runtime/        # composition root + entrypoints (the one module that wires layers)
 ├── pipelines/      # orchestrates services into end-to-end workflows
 ├── services/       # business logic; the only layer that knows both
 │                     agents and repositories
@@ -91,8 +101,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M5 — Configuration | ✅ Complete |
 | M6 — Database Layer | ✅ Complete |
 | M7 — Collector Framework | ✅ Complete |
-| M8 — Walking Skeleton (Problem Extraction + thin E2E report) | ⏳ Next |
-| M9 — Workflow Discovery Agent | Not started |
+| M8 — Walking Skeleton (Problem Extraction + thin E2E report) | ✅ Complete |
+| M9 — Workflow Discovery Agent | ⏳ Next |
 | M10 — Opportunity Scoring | Not started |
 | M11 — Competition Research | Not started |
 | M12 — Product Recommendation | Not started |
