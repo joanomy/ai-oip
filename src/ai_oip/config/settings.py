@@ -17,7 +17,7 @@ Usage:
 from enum import StrEnum
 from functools import lru_cache
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -86,6 +86,33 @@ class Settings(BaseSettings):
             "throughout (agents, services, and pipelines are async)."
         ),
     )
+    anthropic_api_key: SecretStr | None = Field(
+        default=None,
+        description=(
+            "API key for the Anthropic provider. SecretStr, so it is "
+            "masked in repr/logs. Optional here — environments that "
+            "don't run agents need no key; constructing the provider "
+            "without one fails fast with ConfigurationError instead."
+        ),
+    )
+    anthropic_model: str = Field(
+        default="claude-opus-4-8",
+        description=(
+            "Default Claude model for the Anthropic provider. "
+            "Overridable per request via CompletionRequest.model."
+        ),
+    )
+
+    @field_validator("anthropic_api_key", mode="before")
+    @classmethod
+    def _empty_api_key_is_none(cls, value: object) -> object:
+        """Treat ANTHROPIC_API_KEY= (empty) as absent, not as an empty secret.
+
+        Without this, a blank line in .env would produce SecretStr("")
+        — which passes an is-None check and then fails deep inside the
+        first API call instead of at provider construction.
+        """
+        return None if value == "" else value
 
     @field_validator("log_level")
     @classmethod

@@ -46,3 +46,20 @@ class PromptRenderError(PromptError):
 
 class ConfigurationError(AIOIPError):
     """Raised when required configuration is missing or invalid."""
+
+
+class ProviderError(AIOIPError):
+    """Raised when an LLM provider call fails (network, rate limit, API error).
+
+    Distinct from AgentExecutionError so pipelines can tell "the model
+    couldn't be reached" (often retryable) apart from "the agent produced
+    bad output" (usually not retryable as-is).
+    """
+
+
+class EvalError(AIOIPError):
+    """Raised when an eval fixture is malformed or uses unknown expectation types.
+
+    A *failing* eval case is a result, not an exception — this is raised
+    only when the eval itself cannot be run as written.
+    """

@@ -1,5 +1,8 @@
-"""Agents.base: the BaseAgent contract every agent must implement."""
+"""Agents.base: the BaseAgent contract plus the shared run-support helpers
+every concrete agent uses (output validation, run tracing)."""
 
 from ai_oip.agents.base.agent import BaseAgent
+from ai_oip.agents.base.output import parse_json_output
+from ai_oip.agents.base.tracing import log_agent_run
 
-__all__ = ["BaseAgent"]
+__all__ = ["BaseAgent", "log_agent_run", "parse_json_output"]

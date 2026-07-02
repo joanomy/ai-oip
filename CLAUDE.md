@@ -220,11 +220,11 @@ AI-first software company for years to come.
 | M0 -- Vision & Engineering Foundation | Complete |
 | M1 -- Development Environment | Complete |
 | M2 -- AI Runtime Foundation | Complete |
-| M3 -- Agent Framework & Evaluation Harness | Next (BaseAgent interface exists) |
+| M3 -- Agent Framework & Evaluation Harness | Complete |
 | M4 -- Prompt Management | Complete |
 | M5 -- Configuration | Complete |
 | M6 -- Database Layer | Complete |
-| M7 -- Collector Framework | Not started |
+| M7 -- Collector Framework | Next |
 | M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Not started |
 | M9 -- Workflow Discovery Agent | Not started |
 | M10 -- Opportunity Scoring | Not started |
@@ -238,20 +238,29 @@ AI-first software company for years to come.
 | MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
 **Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M3 -> M7 -> M8..M15 in sequence ->
+Recommended remaining order: M7 -> M8..M15 in sequence ->
 MX.1 -> MX.2 -> MX.3. Prompts (M4, complete) came before the agent
-framework (M3) because every agent's contract requires its prompt to
-exist as a versioned, external template — building agents first would
-have forced placeholder prompts that violate that contract from day
-one. M8
+framework (M3, complete) because every agent's contract requires its
+prompt to exist as a versioned, external template. M8
 delivers the first end-to-end product output; every later milestone
 extends a working pipeline, each gated on its eval suite.
 
 **Eval discipline (ADR-0006).** Every prompt ships with eval fixtures
 (golden inputs / expected-property outputs) — required and enforced by
-the prompt loader since M4; M3 delivers the eval runner that consumes
-them. From M8 onward, "no concrete agent ships without an eval suite"
-is a quality gate with the same standing as the coverage floor.
+the prompt loader since M4; the eval runner (`evals/`, M3) consumes
+them with contains / not_contains / matches semantics (ADR-0008). From
+M8 onward, "no concrete agent ships without an eval suite" is a
+quality gate with the same standing as the coverage floor.
+
+**Agent framework detail (M3, complete):** `LLMProvider` interface +
+`AnthropicProvider` (injectable client; vendor SDKs never escape
+`providers/`), `AgentRegistry` (name -> class), `parse_json_output`
+output guardrail, `log_agent_run` structured tracing, eval runner.
+First secret landed as `SecretStr` (`Settings.anthropic_api_key`,
+optional globally, required fail-fast at provider construction).
+Composition-root decision deferred again — deliberately — to M7/M8,
+where the first component actually composes providers + agents +
+repositories (ADR-0008 §9). See ADR-0008.
 
 **Prompt management detail (M4, complete):** Markdown templates with
 YAML frontmatter (name, version, outcome, role, objective,
@@ -298,7 +307,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0007`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0008`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 
@@ -310,9 +319,11 @@ src/ai_oip/
 ├── services/       # business logic; only layer that knows both
 │                     agents and repositories
 ├── collectors/     # external data ingestion
+├── evals/          # eval harness: runs prompt golden cases (ADR-0006/0008)
 ├── agents/         # single-responsibility AI units -- NEVER import
 │                     repositories or touch the DB directly
 ├── repositories/   # the ONLY layer allowed to query the database
+├── providers/      # LLM vendor clients behind LLMProvider -- swappable
 ├── models/         # SQLAlchemy ORM (data at rest) + engine/session mgmt
 ├── schemas/        # Pydantic (data in motion -- agent I/O, API I/O)
 ├── prompts/        # versioned prompt templates, external to code
@@ -323,17 +334,19 @@ src/ai_oip/
 ```
 
 Dependency direction (top imports bottom, never the reverse):
-`pipelines -> services -> collectors, agents -> repositories -> models ->
-schemas, prompts -> logging, monitoring -> config -> core`
+`pipelines -> services -> collectors, evals -> agents -> repositories,
+providers -> models -> schemas, prompts -> logging, monitoring ->
+config -> core`
 
 Enforced via `import-linter` (`pyproject.toml` `[tool.importlinter]`),
 checked in CI and pre-commit -- a violation fails the build, it doesn't
 just get flagged. Three contracts currently active: the full layered
 order; "agents never import repositories or models"; and "only
-repositories access the database layer" (services/pipelines/collectors
-may not import models -- see ADR-0002 addendum, including the open
-composition-root question deferred to M3, Agent Framework, when the
-first application entrypoint is built).
+repositories access the database layer"
+(services/pipelines/collectors/providers/evals may not import models --
+see ADR-0002 addendum; the open composition-root question is deferred
+to M7/M8, when the first component composes providers + agents +
+repositories, per ADR-0008 §9).
 
 ## Tech Stack
 
@@ -347,6 +360,7 @@ first application entrypoint is built).
 | Config | `pydantic-settings` v2 -- typed, validated at startup, fail-fast |
 | Logging | `structlog` -- JSON in staging/prod, console in dev |
 | Database | SQLAlchemy 2.0 async + `asyncpg` (prod) / `aiosqlite` (tests) + Alembic |
+| LLM provider | `anthropic` async SDK, behind the swappable `LLMProvider` interface |
 | Pre-commit | Runs the *same* tool versions as CI via `language: system` hooks (a real version-drift bug was found and fixed this way -- see ADR-0001 addendum) |
 
 ## Quality Gate -- run before considering any milestone done
@@ -368,11 +382,12 @@ All five must pass.
   (JSONB, locking semantics). Real Postgres integration testing deferred
   to the Docker/CI cross-cutting track (recommended alongside M7,
   Collector Framework), when CI gets a real Postgres service container.
-- No secrets management yet -- plain env vars via `Settings`. Revisit when
-  the first real API key is added (expected M3, Agent Framework &
-  Evaluation Harness).
+- Secrets are `SecretStr` env vars (masked in logs/repr), not a secrets
+  manager. Sufficient per ADR-0003's revisit clause until deployment; a
+  dedicated secrets manager lands with the Docker/CI cross-cutting
+  track.
 - `import-linter` layer contract needs a manual update whenever a new
   top-level package is added under `src/ai_oip/` -- it fails
   silently-permissive (unlisted modules aren't checked), not
-  silently-strict. Check this deliberately at M3 and M7, the next
-  milestones likely to add packages.
+  silently-strict. Done deliberately at M3 (providers, evals added);
+  check again at M7 if collectors adds packages.

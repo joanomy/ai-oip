@@ -93,6 +93,34 @@ def test_database_url_accepts_valid_asyncpg_url() -> None:
     assert settings.database_url == "postgresql+asyncpg://user:pass@db.example.com:5432/prod"
 
 
+def test_anthropic_api_key_defaults_to_none() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.anthropic_api_key is None
+    assert settings.anthropic_model == "claude-opus-4-8"
+
+
+def test_empty_anthropic_api_key_is_treated_as_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+
+    settings = Settings(_env_file=None)
+
+    assert settings.anthropic_api_key is None
+
+
+def test_anthropic_api_key_is_masked_in_repr(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-super-secret")
+
+    settings = Settings(_env_file=None)
+
+    assert settings.anthropic_api_key is not None
+    assert "sk-ant-super-secret" not in repr(settings)
+    assert "sk-ant-super-secret" not in str(settings)
+    assert settings.anthropic_api_key.get_secret_value() == "sk-ant-super-secret"
+
+
 def test_invalid_log_level_fails_fast() -> None:
     with pytest.raises(ValidationError, match="Unknown log level"):
         Settings(_env_file=None, log_level="INFOO")

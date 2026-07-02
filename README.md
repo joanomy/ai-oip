@@ -3,11 +3,12 @@
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Engineering foundation complete — vision, dev environment,
-runtime foundation, prompt management, configuration, and database
-layer (M0–M2, M4–M6). Next up: M3 Agent Framework & Evaluation
-Harness, then the business agent pipeline (M8–M15). No concrete
-business models or agents exist yet.
+**Status:** Platform layer complete — foundation (M0–M2), prompt
+management (M4), configuration (M5), database (M6), and the agent
+framework & evaluation harness (M3): swappable LLM providers, agent
+registry, output guardrails, run tracing, eval runner. Next up: M7
+Collector Framework, then the business agent pipeline (M8–M15). No
+concrete business models or agents exist yet.
 
 ## Setup
 
@@ -52,8 +53,10 @@ src/ai_oip/
 ├── services/       # business logic; the only layer that knows both
 │                     agents and repositories
 ├── collectors/     # external data ingestion
+├── evals/          # eval harness — runs prompt golden cases
 ├── agents/         # single-responsibility AI units (never touch the DB)
 ├── repositories/   # the ONLY layer allowed to query the database
+├── providers/      # LLM vendor clients behind a swappable interface
 ├── models/         # SQLAlchemy ORM — data at rest
 ├── schemas/        # Pydantic — data in motion (agent I/O, API I/O)
 ├── prompts/        # versioned prompt templates, external to code
@@ -76,11 +79,11 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M0 — Vision & Engineering Foundation | ✅ Complete |
 | M1 — Development Environment | ✅ Complete |
 | M2 — AI Runtime Foundation | ✅ Complete |
-| M3 — Agent Framework & Evaluation Harness | ⏳ Next |
+| M3 — Agent Framework & Evaluation Harness | ✅ Complete |
 | M4 — Prompt Management | ✅ Complete |
 | M5 — Configuration | ✅ Complete |
 | M6 — Database Layer | ✅ Complete |
-| M7 — Collector Framework | Not started |
+| M7 — Collector Framework | ⏳ Next |
 | M8 — Walking Skeleton (Problem Extraction + thin E2E report) | Not started |
 | M9 — Workflow Discovery Agent | Not started |
 | M10 — Opportunity Scoring | Not started |

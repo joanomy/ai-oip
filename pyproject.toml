@@ -13,6 +13,7 @@ dependencies = [
     "alembic>=1.13",
     "jinja2>=3.1",
     "pyyaml>=6.0",
+    "anthropic>=0.60",
 ]
 
 [dependency-groups]
@@ -90,9 +91,9 @@ type = "layers"
 layers = [
     "ai_oip.pipelines",
     "ai_oip.services",
-    "ai_oip.collectors",
+    "ai_oip.collectors | ai_oip.evals",
     "ai_oip.agents",
-    "ai_oip.repositories",
+    "ai_oip.repositories | ai_oip.providers",
     "ai_oip.models",
     "ai_oip.schemas | ai_oip.prompts",
     "ai_oip.logging | ai_oip.monitoring",
@@ -117,5 +118,11 @@ forbidden_modules = ["ai_oip.repositories", "ai_oip.models"]
 [[tool.importlinter.contracts]]
 name = "Only repositories access the database layer"
 type = "forbidden"
-source_modules = ["ai_oip.services", "ai_oip.pipelines", "ai_oip.collectors"]
+source_modules = [
+    "ai_oip.services",
+    "ai_oip.pipelines",
+    "ai_oip.collectors",
+    "ai_oip.providers",
+    "ai_oip.evals",
+]
 forbidden_modules = ["ai_oip.models"]
