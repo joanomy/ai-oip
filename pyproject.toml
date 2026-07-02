@@ -70,6 +70,7 @@ exclude = ["tests/"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 addopts = "--cov=src/ai_oip --cov-report=term-missing"
 
 # ---- import-linter: enforces the layered dependency rules ----
@@ -99,3 +100,17 @@ name = "Agents never import repositories"
 type = "forbidden"
 source_modules = ["ai_oip.agents"]
 forbidden_modules = ["ai_oip.repositories", "ai_oip.models"]
+
+# The layers contract alone permits any higher layer to import any lower
+# one, so "repositories are the ONLY layer that touches the database"
+# needs this explicit forbidden contract for the layers above
+# repositories — the layer order can't express it. Known open question
+# (revisit at M6/M7, see ADR-0002 addendum): the application's
+# composition root must eventually create sessions (models/session.py)
+# to inject into repositories — either exempt it deliberately here, or
+# move session management out of models/.
+[[tool.importlinter.contracts]]
+name = "Only repositories access the database layer"
+type = "forbidden"
+source_modules = ["ai_oip.services", "ai_oip.pipelines", "ai_oip.collectors"]
+forbidden_modules = ["ai_oip.models"]

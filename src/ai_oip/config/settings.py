@@ -14,10 +14,11 @@ Usage:
         ...
 """
 
+import logging as stdlib_logging
 from enum import StrEnum
 from functools import lru_cache
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -81,6 +82,22 @@ class Settings(BaseSettings):
             "throughout (agents, services, and pipelines are async)."
         ),
     )
+
+    @field_validator("log_level")
+    @classmethod
+    def _validate_log_level(cls, value: str) -> str:
+        """Fail startup on an unrecognized log level name.
+
+        Without this, a typo like LOG_LEVEL=INFOO would pass Settings()
+        validation (it's just a string) and only explode later inside
+        `configure_logging()` — a runtime surprise instead of the
+        startup ValidationError this platform's config layer promises.
+        Normalized to uppercase so downstream consumers never need to.
+        """
+        level = stdlib_logging.getLevelName(value.upper())
+        if not isinstance(level, int):
+            raise ValueError(f"Unknown log level: {value!r}")
+        return value.upper()
 
     @property
     def is_production(self) -> bool:

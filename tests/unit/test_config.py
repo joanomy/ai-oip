@@ -93,6 +93,17 @@ def test_database_url_accepts_valid_asyncpg_url() -> None:
     assert settings.database_url == "postgresql+asyncpg://user:pass@db.example.com:5432/prod"
 
 
+def test_invalid_log_level_fails_fast() -> None:
+    with pytest.raises(ValidationError, match="Unknown log level"):
+        Settings(_env_file=None, log_level="INFOO")
+
+
+def test_log_level_is_normalized_to_uppercase() -> None:
+    settings = Settings(_env_file=None, log_level="debug")
+
+    assert settings.log_level == "DEBUG"
+
+
 def test_default_database_url_in_production_is_rejected() -> None:
     with pytest.raises(ValidationError, match="database_url must be explicitly set"):
         Settings(_env_file=None, environment=Environment.PRODUCTION)

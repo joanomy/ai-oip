@@ -91,3 +91,26 @@ shape without a database migration later.
 - Extraction into an independent service (Phase 3 per architecture
   evolution strategy) — the layer boundaries here are exactly the
   candidate seams for that extraction.
+
+## Addendum (2026-07-02, post-M4 engineering re-review)
+
+Decision 3 stated that `services/` and `pipelines/` never import
+`models/` or hold a database session — but only `agents/` had an
+enforcing contract. The layers contract permits any higher layer to
+import any lower one, so a `services → models` import would have
+passed `lint-imports`. The rule was documented everywhere and enforced
+almost nowhere.
+
+Closed by adding a third import-linter contract ("Only repositories
+access the database layer") forbidding `services`, `pipelines`, and
+`collectors` from importing `ai_oip.models` — added while those layers
+are still empty, so the boundary exists before any code can grow
+against it.
+
+**Deliberately deferred (decide at M6/M7):** engine/session management
+(`create_engine*`, `session_scope`) lives in `models/session.py`, and
+whichever layer composes the application must be able to create
+sessions to inject into repositories. Either the composition
+root/entrypoint becomes a documented, named exception to this
+contract, or session management moves out of `models/` into its own
+package. Do not resolve this implicitly by weakening the contract.

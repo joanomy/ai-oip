@@ -68,8 +68,10 @@ def test_unknown_log_level_raises_at_configuration_time() -> None:
 
     reset_logging()
     settings = Settings(_env_file=None)
-    # log_level is a plain str field, so an invalid value bypasses
-    # pydantic validation and must be caught by configure_logging itself.
+    # Settings now validates log_level at construction time, so an
+    # invalid value can only reach configure_logging by bypassing
+    # pydantic entirely — done here deliberately to prove
+    # _resolve_level still rejects it as a second line of defense.
     object.__setattr__(settings, "log_level", "NOT_A_LEVEL")
 
     with pytest.raises(ValueError, match="Unknown log level"):

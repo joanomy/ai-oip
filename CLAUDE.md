@@ -271,8 +271,11 @@ schemas, prompts -> logging, monitoring -> config -> core`
 
 Enforced via `import-linter` (`pyproject.toml` `[tool.importlinter]`),
 checked in CI and pre-commit -- a violation fails the build, it doesn't
-just get flagged. Two contracts currently active: the full layered order,
-and specifically "agents never import repositories or models."
+just get flagged. Three contracts currently active: the full layered
+order; "agents never import repositories or models"; and "only
+repositories access the database layer" (services/pipelines/collectors
+may not import models -- see ADR-0002 addendum, including the open
+composition-root question deferred to M6/M7).
 
 ## Tech Stack
 

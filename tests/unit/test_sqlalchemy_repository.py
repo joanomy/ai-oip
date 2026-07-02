@@ -12,6 +12,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ai_oip.core.exceptions import RepositoryError
+from ai_oip.models.session import create_engine, create_session_factory
 from ai_oip.repositories import BaseRepository, SQLAlchemyRepository
 from tests.fixtures.models import DemoRecord
 
@@ -90,3 +91,37 @@ async def test_save_failure_raises_repository_error(db_session: AsyncSession) ->
 
     with pytest.raises(RepositoryError):
         await repo.save(invalid_record)
+
+
+async def test_read_failures_raise_repository_error() -> None:
+    # An engine with no tables created: every query fails at the DB
+    # level, proving reads are wrapped in RepositoryError like writes.
+    engine = create_engine("sqlite+aiosqlite:///:memory:")
+    session_factory = create_session_factory(engine)
+
+    async with session_factory() as session:
+        repo = SQLAlchemyRepository(session, DemoRecord)
+
+        with pytest.raises(RepositoryError):
+            await repo.get_by_id(uuid4())
+        with pytest.raises(RepositoryError):
+            await repo.list_all()
+        with pytest.raises(RepositoryError):
+            await repo.delete(uuid4())  # fails inside its get_by_id lookup
+
+    await engine.dispose()
+
+
+async def test_delete_flush_failure_raises_repository_error(
+    db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = SQLAlchemyRepository(db_session, DemoRecord)
+    saved = await repo.save(DemoRecord(value="doomed"))
+
+    async def failing_flush() -> None:
+        raise RuntimeError("simulated flush failure")
+
+    monkeypatch.setattr(db_session, "flush", failing_flush)
+
+    with pytest.raises(RepositoryError, match="Failed to delete"):
+        await repo.delete(saved.id)

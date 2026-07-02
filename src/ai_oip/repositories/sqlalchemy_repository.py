@@ -31,8 +31,17 @@ class SQLAlchemyRepository[Entity: Base](BaseRepository[Entity]):
         self._session = session
         self._model = model
 
+    # Every method wraps failures in RepositoryError — not just save().
+    # The exception hierarchy exists so autonomous pipelines can catch
+    # failures by category (retry/skip/halt); a read failure escaping as
+    # a raw SQLAlchemy exception would defeat that categorization
+    # exactly where it matters most.
+
     async def get_by_id(self, entity_id: UUID) -> Entity | None:
-        return await self._session.get(self._model, entity_id)
+        try:
+            return await self._session.get(self._model, entity_id)
+        except Exception as exc:
+            raise RepositoryError(f"Failed to fetch {self._model.__name__} by id: {exc}") from exc
 
     async def save(self, entity: Entity) -> Entity:
         try:
@@ -45,9 +54,13 @@ class SQLAlchemyRepository[Entity: Base](BaseRepository[Entity]):
 
     async def delete(self, entity_id: UUID) -> None:
         entity = await self.get_by_id(entity_id)
-        if entity is not None:
+        if entity is None:
+            return
+        try:
             await self._session.delete(entity)
             await self._session.flush()
+        except Exception as exc:
+            raise RepositoryError(f"Failed to delete {self._model.__name__}: {exc}") from exc
 
     async def list_all(self) -> list[Entity]:
         """List all rows for this model.
@@ -56,5 +69,8 @@ class SQLAlchemyRepository[Entity: Base](BaseRepository[Entity]):
         but common enough across concrete repositories to belong here
         rather than being reimplemented per-repository.
         """
-        result = await self._session.execute(select(self._model))
-        return list(result.scalars().all())
+        try:
+            result = await self._session.execute(select(self._model))
+            return list(result.scalars().all())
+        except Exception as exc:
+            raise RepositoryError(f"Failed to list {self._model.__name__}: {exc}") from exc
