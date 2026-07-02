@@ -29,6 +29,9 @@ class Environment(StrEnum):
     PRODUCTION = "production"
 
 
+_DEFAULT_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_oip_dev"
+
+
 class Settings(BaseSettings):
     """Typed, validated application configuration.
 
@@ -71,7 +74,7 @@ class Settings(BaseSettings):
         description="Enables verbose/debug behavior. Must be False in production.",
     )
     database_url: str = Field(
-        default="postgresql+asyncpg://postgres:postgres@localhost:5432/ai_oip_dev",
+        default=_DEFAULT_DATABASE_URL,
         description=(
             "Async SQLAlchemy connection string. Must use the asyncpg "
             "driver — the platform standardizes on async DB access "
@@ -117,6 +120,24 @@ class Settings(BaseSettings):
         """
         if self.is_production and self.debug:
             raise ValueError("debug must be False when environment=production")
+        return self
+
+    @model_validator(mode="after")
+    def _forbid_default_database_url_in_production(self) -> "Settings":
+        """Fail startup if production is silently running against the dev default.
+
+        The default `database_url` points at localhost with placeholder
+        credentials, intended only for local development. Without this
+        check, a deployment that forgets to set `DATABASE_URL` would not
+        fail fast — it would start successfully and silently point at the
+        wrong (or a nonexistent) database, exactly the class of surprise
+        this platform's config validation exists to prevent.
+        """
+        if self.is_production and self.database_url == _DEFAULT_DATABASE_URL:
+            raise ValueError(
+                "database_url must be explicitly set (not the local-dev default) "
+                "when environment=production"
+            )
         return self
 
 

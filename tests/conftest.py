@@ -9,7 +9,6 @@ oversight.
 
 from collections.abc import AsyncGenerator
 
-import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
@@ -36,8 +35,3 @@ async def db_session(db_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, Non
     session_factory = create_session_factory(db_engine)
     async with session_factory() as session:
         yield session
-
-
-@pytest.fixture
-def anyio_backend() -> str:
-    return "asyncio"

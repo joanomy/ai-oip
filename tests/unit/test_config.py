@@ -41,7 +41,12 @@ def test_debug_true_in_production_is_rejected() -> None:
 
 
 def test_debug_false_in_production_is_allowed() -> None:
-    settings = Settings(_env_file=None, environment=Environment.PRODUCTION, debug=False)
+    settings = Settings(
+        _env_file=None,
+        environment=Environment.PRODUCTION,
+        debug=False,
+        database_url="postgresql+asyncpg://user:pass@prod-db.example.com:5432/ai_oip",
+    )
 
     assert settings.is_production is True
     assert settings.debug is False
@@ -86,3 +91,19 @@ def test_database_url_accepts_valid_asyncpg_url() -> None:
     )
 
     assert settings.database_url == "postgresql+asyncpg://user:pass@db.example.com:5432/prod"
+
+
+def test_default_database_url_in_production_is_rejected() -> None:
+    with pytest.raises(ValidationError, match="database_url must be explicitly set"):
+        Settings(_env_file=None, environment=Environment.PRODUCTION)
+
+
+def test_explicit_database_url_in_production_is_allowed() -> None:
+    settings = Settings(
+        _env_file=None,
+        environment=Environment.PRODUCTION,
+        database_url="postgresql+asyncpg://user:pass@prod-db.example.com:5432/ai_oip",
+    )
+
+    assert settings.is_production is True
+    assert settings.database_url == "postgresql+asyncpg://user:pass@prod-db.example.com:5432/ai_oip"

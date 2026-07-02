@@ -4,6 +4,12 @@ Deliberately reads the database URL from `ai_oip.config.get_settings()`
 rather than `alembic.ini` — migrations must run against the same
 validated configuration the application itself uses, never a
 separately-maintained connection string that can drift out of sync.
+
+This file lives outside `src/ai_oip/` (import-linter's `root_package`),
+so its direct import of `ai_oip.models` below is invisible to the
+"models is only imported by repositories" contract. That's a known,
+deliberate exception — Alembic's autogenerate needs direct access to
+`Base.metadata` — not an accidental boundary violation. See ADR-0005.
 """
 
 import asyncio

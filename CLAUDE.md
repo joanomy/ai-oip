@@ -233,9 +233,12 @@ AI-first software company for years to come.
 
 **M4 detail:** async SQLAlchemy + Alembic + generic `SQLAlchemyRepository`
 implemented, committed, and passing (39 tests, 100% coverage, all quality
-gates green) under package name `ai_oip` (renamed twice: `ai_platform` ->
-`ai_os` -> `ai_iop` -> `ai_oip`, final name correcting acronym letter
-order to match "Opportunity Intelligence Platform" word order).
+gates green) under package name `ai_oip` (renamed three times:
+`ai_platform` -> `ai_os` -> `ai_iop` -> `ai_oip`; the last rename,
+correcting acronym letter order to match "Opportunity Intelligence
+Platform" word order, happened during M4 — see ADR-0005. Verified
+against git history during the post-M4 engineering review; ADR-0002
+originally misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
 `docs/architecture/ADR-0001` through `ADR-0005`. Read the relevant ADR

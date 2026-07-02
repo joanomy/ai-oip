@@ -83,7 +83,12 @@ def test_development_and_production_use_different_renderers() -> None:
     dev_processors = structlog.get_config()["processors"]
     reset_logging()
 
-    prod_settings = Settings(_env_file=None, environment=Environment.PRODUCTION, debug=False)
+    prod_settings = Settings(
+        _env_file=None,
+        environment=Environment.PRODUCTION,
+        debug=False,
+        database_url="postgresql+asyncpg://user:pass@prod-db.example.com:5432/ai_oip",
+    )
     configure_logging(prod_settings)
     prod_processors = structlog.get_config()["processors"]
     reset_logging()

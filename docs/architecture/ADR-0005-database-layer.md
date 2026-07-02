@@ -67,6 +67,17 @@ environments) and `created_at`/`updated_at` set via
 `server_default=func.now()` (correct even for rows inserted outside
 the application, e.g. by a migration or another future service).
 
+### 6. `migrations/env.py` is a deliberate, documented exception to import-linter
+`import-linter`'s `root_package = "ai_oip"` only analyzes files under
+`src/ai_oip/`. `migrations/env.py` sits outside that root, so its direct
+import of `ai_oip.models` (needed for Alembic's autogenerate to see
+`Base.metadata`) is invisible to the "models is only imported by
+repositories" contract — not a gap in the contract's coverage that was
+missed, but a boundary the tool was never going to enforce, now called
+out explicitly rather than left implicit. No other code outside
+`repositories/` should follow this precedent without the same
+justification (Alembic tooling, not application logic).
+
 ## Consequences
 - Any concrete future model inherits `Base`, `UUIDPrimaryKeyMixin`,
   `TimestampMixin` — established once, not reinvented per entity.

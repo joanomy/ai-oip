@@ -1,6 +1,6 @@
 # ADR-0002: Modular Monolith Layering, Enforcement, and Project Naming
 
-**Status:** Accepted
+**Status:** Accepted (layer order in Decision 2 superseded in part by ADR-0004 — `logging`/`monitoring` now depend on `config`)
 **Date:** 2026-07-02
 **Milestone:** M1 — Project Architecture & Folder Structure
 
@@ -10,20 +10,26 @@ package boundaries and their allowed dependency directions need to be
 fixed — and, critically, enforced by tooling rather than left as a
 convention that erodes as the codebase grows.
 
-Separately, the project was renamed twice during this milestone:
-`ai_platform` → `ai_os` → `ai_oip` (AI Opportunity Intelligence Platform).
-Recorded here so the history is traceable from the ADR log rather than
-only from git commit messages.
+Separately, the project was renamed during this milestone:
+`ai_platform` → `ai_iop`. Recorded here so the history is traceable from
+the ADR log rather than only from git commit messages.
 
 ## Decisions
 
-### 1. Package name: `ai_oip`
-Final name reflects the product identity: **AI Opportunity Intelligence
-Platform**. Renaming twice this early (before any consumer code exists)
-cost a mechanical rename pass; renaming after M4+ would have cost a
-migration. Naming was deliberately finalized before the database layer,
-which is the point past which renames become expensive (table names,
-migration history, external references).
+### 1. Package name: `ai_iop`
+Reflects the product identity: AI Opportunity Intelligence Platform.
+Renaming this early (before any consumer code exists) cost a mechanical
+rename pass; renaming after M4+ would have cost a migration.
+
+**Correction (post-M4 engineering review):** this section originally
+claimed the milestone renamed the package all the way to `ai_oip` and
+that naming was "finalized before the database layer." Both claims were
+wrong. The actual M1 commit (`c0aae81`) renamed `ai_platform` → `ai_iop`
+only. The acronym-order correction to `ai_oip` did not happen until
+**M4**, during the database layer itself — see ADR-0005. This ADR is
+left otherwise unedited per the project's ADR-as-historical-record
+convention (see ADR-0001's addendum for the same pattern); this note
+exists so a reader trusts the corrected fact, not the original claim.
 
 ### 2. Ten-package layered structure
 ```
