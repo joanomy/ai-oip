@@ -9,6 +9,7 @@ Dependency rule: depends only on core.
 """
 
 from ai_oip.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from ai_oip.models.competition import CompetitionRecord
 from ai_oip.models.opportunity import OpportunityScoreRecord
 from ai_oip.models.problem import ProblemRecord
 from ai_oip.models.session import (
@@ -21,6 +22,7 @@ from ai_oip.models.workflow import WorkflowRecord
 
 __all__ = [
     "Base",
+    "CompetitionRecord",
     "OpportunityScoreRecord",
     "ProblemRecord",
     "TimestampMixin",

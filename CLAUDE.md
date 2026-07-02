@@ -228,8 +228,8 @@ AI-first software company for years to come.
 | M8 -- Walking Skeleton (Problem Extraction + thin E2E report) | Complete |
 | M9 -- Workflow Discovery Agent | Complete |
 | M10 -- Opportunity Scoring | Complete |
-| M11 -- Competition Research | Next |
-| M12 -- Product Recommendation | Not started |
+| M11 -- Competition Research | Complete |
+| M12 -- Product Recommendation | Next |
 | M13 -- ICP Generator | Not started |
 | M14 -- Company Discovery | Not started |
 | M15 -- Executive Report v2 | Not started |
@@ -238,11 +238,11 @@ AI-first software company for years to come.
 | MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
 **Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M11..M15 in sequence ->
-MX.1 -> MX.2 -> MX.3. The pipeline is three stages deep with persisted
-handoffs, driven by the unified CLI: `ai-oip discover "<query>"`
-(collect -> problems), `ai-oip workflows` (problems -> workflows),
-`ai-oip score` (workflows -> ranked opportunities). Every remaining
+Recommended remaining order: M12..M15 in sequence ->
+MX.1 -> MX.2 -> MX.3. The pipeline is four stages deep with persisted
+handoffs, driven by the unified CLI: `ai-oip discover "<query>"` ->
+`ai-oip workflows` -> `ai-oip score` -> `ai-oip research`
+(top opportunities -> competitive landscapes). Every remaining
 milestone extends this working pipeline, each gated on its eval suite.
 
 **Eval discipline (ADR-0006).** Every prompt ships with eval fixtures
@@ -251,6 +251,15 @@ the prompt loader since M4; the eval runner (`evals/`, M3) consumes
 them with contains / not_contains / matches semantics (ADR-0008). From
 M8 onward, "no concrete agent ships without an eval suite" is a
 quality gate with the same standing as the coverage floor.
+
+**Competition research detail (M11, complete):** model-knowledge-only
+v1 (CEO decision; web-search grounding is the planned v2 behind the
+same interface — trigger: observed stale assessments, ADR-0013).
+Honesty constraints are load-bearing: the prompt forbids invented
+competitors and stale specifics (pinned by test); the report always
+carries a knowledge-lag banner; `saturation` is a Literal enum. First
+two-store read (top scores joined to workflow details, deduped by
+best score). `CompetitionRecord` + migration 0004; `ai-oip research`.
 
 **Opportunity scoring detail (M10, complete):** the LLM judges, the
 code computes — `score_opportunities` v1 scores five typed dimensions
@@ -353,7 +362,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0012`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0013`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 

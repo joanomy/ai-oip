@@ -5,7 +5,12 @@ reporting. This exists so every discovery run has a human-readable
 artifact from day one.
 """
 
-from ai_oip.schemas import OpportunityReport, SkeletonReport, WorkflowReport
+from ai_oip.schemas import (
+    CompetitionReport,
+    OpportunityReport,
+    SkeletonReport,
+    WorkflowReport,
+)
 
 _DIMENSION_LABELS = {
     "pain_intensity": "Pain intensity",
@@ -41,6 +46,39 @@ def render_markdown_report(report: SkeletonReport) -> str:
             title = finding.source_title or "source"
             suffix = f" ({finding.source_url})" if finding.source_url else ""
             lines.append(f"**Source:** {title}{suffix}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_competition_report(report: CompetitionReport) -> str:
+    """Render a CompetitionReport as a markdown document."""
+    lines = [
+        "# Competition Research Report",
+        "",
+        f"- **Opportunities analyzed:** {report.targets_analyzed}",
+        "",
+        "_Assessments reflect model training knowledge and may lag the",
+        "live market — verify before acting on them._",
+        "",
+    ]
+    if not report.assessments:
+        lines.append("_No scored opportunities were available to research._")
+    for number, assessment in enumerate(report.assessments, start=1):
+        lines.append(
+            f"## {number}. {assessment.workflow_name} "
+            f"({assessment.total_score}/100) — saturation: {assessment.saturation}"
+        )
+        lines.append("")
+        if assessment.competitors:
+            lines.append("**Known competitors:**")
+            for competitor in assessment.competitors:
+                suffix = f" — {competitor.positioning}" if competitor.positioning else ""
+                lines.append(f"- **{competitor.name}**: {competitor.offering}{suffix}")
+        else:
+            lines.append("_No known competitors identified._")
+        if assessment.market_gap:
+            lines.append("")
+            lines.append(f"**Gap:** {assessment.market_gap}")
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 

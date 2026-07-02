@@ -1,0 +1,21 @@
+# Eval fixtures for research_competition (ADR-0006/0007/0008).
+- id: crowded_space
+  variables:
+    opportunities_digest: |
+      [1] Vendor invoice data entry (opportunity score 82.5/100) —
+          Manually transferring invoice data from vendor PDFs into the
+          accounting system.
+          Steps: Open vendor PDF; Re-key fields; Reconcile totals
+          Actors: Bookkeeper
+  expected:
+    contains: "assessments"
+- id: obscure_niche
+  variables:
+    opportunities_digest: |
+      [1] Beekeeping hive inspection logs (opportunity score 41.0/100) —
+          Recording hive health observations on paper cards and
+          retyping them monthly.
+          Steps: Inspect hive; Fill paper card; Retype into spreadsheet
+          Actors: Apiarist
+  expected:
+    contains: "assessments"

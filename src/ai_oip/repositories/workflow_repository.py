@@ -30,6 +30,20 @@ class WorkflowRepository(SQLAlchemyRepository[WorkflowRecord]):
         )
         await self.save(record)
 
+    async def get_detail(self, workflow_id: UUID) -> WorkflowDetail | None:
+        """One stored workflow as data in motion, or None if unknown."""
+        record = await self.get_by_id(workflow_id)
+        if record is None:
+            return None
+        return WorkflowDetail(
+            id=record.id,
+            name=record.name,
+            description=record.description,
+            steps=record.steps,
+            actors=record.actors,
+            problems_linked=len(record.problem_ids),
+        )
+
     async def list_details(self, *, limit: int = 50) -> list[WorkflowDetail]:
         """Most recent workflows, as data in motion (newest first)."""
         try:

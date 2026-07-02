@@ -8,6 +8,16 @@ Dependency rule: depends only on core.
 """
 
 from ai_oip.schemas.collected_item import CollectedItem
+from ai_oip.schemas.competition_research import (
+    CompetitionReport,
+    CompetitionResearchInput,
+    CompetitionResearchOutput,
+    CompetitionSummary,
+    Competitor,
+    OpportunityDetail,
+    ResearchTarget,
+    WorkflowCompetition,
+)
 from ai_oip.schemas.opportunity_scoring import (
     DimensionScore,
     OpportunityReport,
@@ -34,9 +44,15 @@ from ai_oip.schemas.workflow_discovery import (
 
 __all__ = [
     "CollectedItem",
+    "CompetitionReport",
+    "CompetitionResearchInput",
+    "CompetitionResearchOutput",
+    "CompetitionSummary",
+    "Competitor",
     "DimensionScore",
     "DiscoveredWorkflow",
     "ExtractedProblem",
+    "OpportunityDetail",
     "OpportunityReport",
     "OpportunityScoringInput",
     "OpportunityScoringOutput",
@@ -45,7 +61,9 @@ __all__ = [
     "ProblemExtractionOutput",
     "ProblemFinding",
     "RankedOpportunity",
+    "ResearchTarget",
     "SkeletonReport",
+    "WorkflowCompetition",
     "WorkflowDetail",
     "WorkflowDiscoveryInput",
     "WorkflowDiscoveryOutput",

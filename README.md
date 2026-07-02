@@ -3,12 +3,11 @@
 Production-grade Python platform for autonomously executing AI workflows via
 modular, single-responsibility agents.
 
-**Status:** Platform (M0–M7) plus three pipeline stages (M8–M10)
-complete, driven by one CLI: `ai-oip discover "<query>"` (collect →
-extract problems), `ai-oip workflows` (problems → workflows),
-`ai-oip score` (workflows → ranked opportunities, LLM-judged
-dimensions + deterministic weighted totals). Next up: M11 Competition
-Research.
+**Status:** Platform (M0–M7) plus four pipeline stages (M8–M11)
+complete, driven by one CLI: `ai-oip discover "<query>"` →
+`ai-oip workflows` → `ai-oip score` → `ai-oip research` (competitive
+landscapes for the top-ranked opportunities, model-knowledge v1 with
+honesty constraints). Next up: M12 Product Recommendation.
 
 ## Setup
 
@@ -55,6 +54,7 @@ ANTHROPIC_API_KEY=sk-ant-...           # set in .env
 uv run ai-oip discover "automation pain" --limit 10 --output problems.md
 uv run ai-oip workflows --output workflows.md
 uv run ai-oip score --output opportunities.md
+uv run ai-oip research --output competition.md
 ```
 
 ## Architecture
@@ -106,8 +106,8 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M8 — Walking Skeleton (Problem Extraction + thin E2E report) | ✅ Complete |
 | M9 — Workflow Discovery Agent | ✅ Complete |
 | M10 — Opportunity Scoring | ✅ Complete |
-| M11 — Competition Research | ⏳ Next |
-| M12 — Product Recommendation | Not started |
+| M11 — Competition Research | ✅ Complete |
+| M12 — Product Recommendation | ⏳ Next |
 | M13 — ICP Generator | Not started |
 | M14 — Company Discovery | Not started |
 | M15 — Executive Report v2 | Not started |
