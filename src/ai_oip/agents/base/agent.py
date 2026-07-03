@@ -4,7 +4,7 @@ Every agent in this system implements this contract: one typed input,
 one typed output, one `run` method. No agent may have more than one
 public entrypoint, and no agent may reach into the database or another
 agent directly — orchestration is the caller's job (see `services/`
-and `pipelines/`), not the agent's.
+and the `runtime/` stage modules), not the agent's.
 """
 
 from abc import ABC, abstractmethod
@@ -28,8 +28,8 @@ class BaseAgent[InputSchema: BaseModel, OutputSchema: BaseModel](ABC):
           it arrives as part of `InputSchema`.
     """
 
-    #: Name of this agent, used for logging, registry lookup, and
-    #: matching against its prompt file. Must be set by subclasses.
+    #: Name of this agent, used for logging and matching against its
+    #: prompt file. Must be set by subclasses.
     name: str
 
     @abstractmethod

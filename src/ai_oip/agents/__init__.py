@@ -14,6 +14,5 @@ NEVER on repositories or models.
 """
 
 from ai_oip.agents.base import BaseAgent, log_agent_run, parse_json_output
-from ai_oip.agents.registry import AgentRegistry
 
-__all__ = ["AgentRegistry", "BaseAgent", "log_agent_run", "parse_json_output"]
+__all__ = ["BaseAgent", "log_agent_run", "parse_json_output"]

@@ -103,7 +103,6 @@ name = "Layered architecture"
 type = "layers"
 layers = [
     "ai_oip.runtime",
-    "ai_oip.pipelines",
     "ai_oip.services",
     "ai_oip.collectors | ai_oip.evals",
     "ai_oip.agents",
@@ -134,7 +133,6 @@ name = "Only repositories access the database layer"
 type = "forbidden"
 source_modules = [
     "ai_oip.services",
-    "ai_oip.pipelines",
     "ai_oip.collectors",
     "ai_oip.providers",
     "ai_oip.evals",
@@ -143,4 +141,51 @@ forbidden_modules = ["ai_oip.models"]
 # Direct imports only: services legitimately reach models *through*
 # repositories (that indirection is the whole point of the layer); the
 # contract exists to stop them holding the ORM/session directly.
+allow_indirect_imports = true
+
+# The venture-studio seam (ADR-0015): the sources are the Platform —
+# frame modules a second app would reuse unchanged; the forbidden list
+# is the App — everything OIP-specific stamped beside them. Platform
+# code may never know a concrete agent, collector, table, or schema
+# exists. Direct imports only (platform frames legitimately import the
+# `ai_oip.models` package init, which re-exports domain tables).
+# Maintenance caveat, same as the layers contract: every new domain
+# module must be added to the forbidden list — unlisted modules are
+# silently permitted, not checked.
+[[tool.importlinter.contracts]]
+name = "Platform never imports domain"
+type = "forbidden"
+source_modules = [
+    "ai_oip.agents.base",
+    "ai_oip.collectors.base",
+    "ai_oip.evals",
+    "ai_oip.models.base",
+    "ai_oip.models.session",
+    "ai_oip.prompts.loader",
+    "ai_oip.providers",
+    "ai_oip.repositories.base",
+    "ai_oip.repositories.sqlalchemy_repository",
+    "ai_oip.runtime.composition",
+]
+forbidden_modules = [
+    "ai_oip.agents.competition_research",
+    "ai_oip.agents.opportunity_scoring",
+    "ai_oip.agents.problem_extraction",
+    "ai_oip.agents.workflow_discovery",
+    "ai_oip.collectors.hackernews",
+    "ai_oip.models.competition",
+    "ai_oip.models.opportunity",
+    "ai_oip.models.problem",
+    "ai_oip.models.workflow",
+    "ai_oip.repositories.competition_repository",
+    "ai_oip.repositories.opportunity_repository",
+    "ai_oip.repositories.problem_repository",
+    "ai_oip.repositories.workflow_repository",
+    "ai_oip.schemas.competition_research",
+    "ai_oip.schemas.opportunity_scoring",
+    "ai_oip.schemas.problem_extraction",
+    "ai_oip.schemas.report",
+    "ai_oip.schemas.workflow_discovery",
+    "ai_oip.services",
+]
 allow_indirect_imports = true

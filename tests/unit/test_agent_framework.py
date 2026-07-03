@@ -1,10 +1,10 @@
-"""Tests for the agent framework helpers: registry, output guardrail, tracing."""
+"""Tests for the agent framework helpers: output guardrail, tracing."""
 
 import pytest
 import structlog
 from pydantic import BaseModel
 
-from ai_oip.agents import AgentRegistry, BaseAgent, log_agent_run, parse_json_output
+from ai_oip.agents import BaseAgent, log_agent_run, parse_json_output
 from ai_oip.core.exceptions import AgentExecutionError
 
 
@@ -21,47 +21,6 @@ class GreeterAgent(BaseAgent[GreetingInput, GreetingOutput]):
 
     async def run(self, input_data: GreetingInput) -> GreetingOutput:
         return GreetingOutput(greeting=f"Hello {input_data.person_name}")
-
-
-class TestRegistry:
-    def test_register_and_get_roundtrip(self) -> None:
-        registry = AgentRegistry()
-
-        registry.register(GreeterAgent)
-
-        assert registry.get("greeter") is GreeterAgent
-        assert registry.names() == ["greeter"]
-
-    def test_register_works_as_decorator(self) -> None:
-        registry = AgentRegistry()
-
-        returned = registry.register(GreeterAgent)
-
-        assert returned is GreeterAgent
-
-    def test_duplicate_name_is_rejected(self) -> None:
-        registry = AgentRegistry()
-        registry.register(GreeterAgent)
-
-        with pytest.raises(ValueError, match="already registered"):
-            registry.register(GreeterAgent)
-
-    def test_class_without_name_is_rejected(self) -> None:
-        registry = AgentRegistry()
-
-        class NamelessAgent(BaseAgent[GreetingInput, GreetingOutput]):
-            async def run(self, input_data: GreetingInput) -> GreetingOutput:
-                raise NotImplementedError
-
-        with pytest.raises(ValueError, match="non-empty `name`"):
-            registry.register(NamelessAgent)
-
-    def test_unknown_name_raises_with_available_names(self) -> None:
-        registry = AgentRegistry()
-        registry.register(GreeterAgent)
-
-        with pytest.raises(KeyError, match="greeter"):
-            registry.get("does_not_exist")
 
 
 class TestOutputGuardrail:

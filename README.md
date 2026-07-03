@@ -68,7 +68,6 @@ internally split into layers with enforced, one-directional dependencies.
 ```
 src/ai_oip/
 ├── runtime/        # composition root + entrypoints (the one module that wires layers)
-├── pipelines/      # orchestrates services into end-to-end workflows
 ├── services/       # business logic; the only layer that knows both
 │                     agents and repositories
 ├── collectors/     # external data ingestion

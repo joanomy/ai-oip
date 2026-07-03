@@ -14,9 +14,12 @@ exactly how to proceed.
 
 Optimize for reversible decisions. When faced with multiple technically
 valid approaches, choose the one that is easiest to change later while
-still meeting today's requirements. Build platforms, not features. Every
-capability should be reusable by future AI applications, even if it is
-initially developed to solve a single problem.
+still meeting today's requirements. Build features, harvest platforms:
+platform abstractions are extracted from duplication observed across
+working features (the ADR-0014 discipline — consolidate at the third
+or fourth stamping, never ahead of the second consumer), not designed
+speculatively. Every harvested capability should be reusable by future
+AI applications.
 
 ## Outcome We Want to Achieve
 
@@ -39,8 +42,11 @@ Every architectural decision should optimize for:
 - Testability
 - Multi-domain support
 
-New pipelines should be added by configuration and composition rather than
-modifying existing code, wherever possible.
+Configuration is for **values** (prompts, weights, model IDs, limits);
+**structure** lives in typed, composed Python (the runtime stage
+modules), never in config-driven DAGs or YAML workflow definitions.
+New pipeline stages are added by composing existing frames rather than
+modifying them, wherever possible.
 
 ## Role
 
@@ -252,6 +258,23 @@ them with contains / not_contains / matches semantics (ADR-0008). From
 M8 onward, "no concrete agent ships without an eval suite" is a
 quality gate with the same standing as the coverage floor.
 
+**Platform/domain seam (ADR-0015, pre-M12):** the repo holds exactly
+TWO bounded contexts, not eleven — the **Platform** (frame modules a
+second app would reuse unchanged: `agents/base`, `collectors/base`,
+`models/base`+`session`, `repositories/base`+`sqlalchemy_repository`,
+`prompts/loader`, `providers/`, `evals/`, `runtime/composition`) and
+the **App** (everything OIP-specific: concrete agents, services,
+domain models/repositories/schemas, prompt templates, runtime stage
+modules). Enforced by import-linter contract #4 ("Platform never
+imports domain"). The platform grows only by harvest, never by
+speculation. Physical split into a uv workspace (`packages/platform` +
+`apps/oip`) is deliberately deferred until app #2 exists; separate
+repos only on spin-out or separate team ownership. Deleted as YAGNI:
+`pipelines/` (empty since inception; runtime stage modules are the
+orchestration) and `AgentRegistry` (zero production call sites).
+Known misplacement, accepted until the split: prompt *templates* are
+App assets living under the Platform's `prompts/` package.
+
 **Consolidation (post-M11 review, ADR-0014):** `PromptedAgent`
 (agents/base/prompted.py) owns the digest -> render -> complete ->
 parse frame — concrete agents supply name, digest_variable,
@@ -317,7 +340,8 @@ deferral (ADR-0009 §6). See ADR-0009.
 
 **Agent framework detail (M3, complete):** `LLMProvider` interface +
 `AnthropicProvider` (injectable client; vendor SDKs never escape
-`providers/`), `AgentRegistry` (name -> class), `parse_json_output`
+`providers/`), `AgentRegistry` (name -> class; removed pre-M12 by
+ADR-0015 — zero production call sites in 11 milestones), `parse_json_output`
 output guardrail, `log_agent_run` structured tracing, eval runner.
 First secret landed as `SecretStr` (`Settings.anthropic_api_key`,
 optional globally, required fail-fast at provider construction).
@@ -371,7 +395,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0014`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0015`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 
@@ -381,7 +405,6 @@ scratch.
 src/ai_oip/
 ├── runtime/        # composition root + entrypoints -- the ONE module
 │                     allowed to create sessions & wire layers (ADR-0010)
-├── pipelines/      # orchestrates services into end-to-end workflows
 ├── services/       # business logic; only layer that knows both
 │                     agents and repositories
 ├── collectors/     # external data ingestion
@@ -400,19 +423,22 @@ src/ai_oip/
 ```
 
 Dependency direction (top imports bottom, never the reverse):
-`runtime -> pipelines -> services -> collectors, evals -> agents ->
+`runtime -> services -> collectors, evals -> agents ->
 repositories, providers -> models -> schemas, prompts -> logging,
 monitoring -> config -> core`
 
 Enforced via `import-linter` (`pyproject.toml` `[tool.importlinter]`),
 checked in CI and pre-commit -- a violation fails the build, it doesn't
-just get flagged. Three contracts currently active: the full layered
-order; "agents never import repositories or models"; and "only
+just get flagged. Four contracts currently active: the full layered
+order; "agents never import repositories or models"; "only
 repositories access the database layer"
-(services/pipelines/collectors/providers/evals may not import models
+(services/collectors/providers/evals may not import models
 directly; indirect chains through repositories are allowed by design,
 and `runtime/` is the one documented exception as composition root --
-ADR-0002's open question, resolved at M8 by ADR-0010).
+ADR-0002's open question, resolved at M8 by ADR-0010); and "platform
+never imports domain" (the venture-studio seam, ADR-0015 -- frame
+modules may never import the OIP-specific modules stamped beside
+them).
 
 ## Tech Stack
 
@@ -464,4 +490,6 @@ All five must pass.
   silently-permissive (unlisted modules aren't checked), not
   silently-strict. Done deliberately at M3 (providers, evals) and M8
   (runtime, added at the top of the layers list). Re-check whenever a
-  package is added.
+  package is added. The same caveat applies to the "platform never
+  imports domain" contract (ADR-0015): every new domain module must be
+  added to its forbidden list, every new frame module to its sources.
