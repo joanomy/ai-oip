@@ -1,0 +1,23 @@
+# Eval fixtures for product_recommendation (ADR-0006/0007/0008).
+- id: clear_gap_low_saturation
+  variables:
+    targets_digest: |
+      [1] Vendor invoice data entry (opportunity score 82.5/100) —
+          Manually transferring invoice data from vendor PDFs into the
+          accounting system.
+          Steps: Open vendor PDF; Re-key fields; Reconcile totals
+          Actors: Bookkeeper
+          Competitive landscape: saturation low; competitors: none known
+  expected:
+    contains: "plans"
+- id: crowded_space_no_gap
+  variables:
+    targets_digest: |
+      [1] General expense tracking (opportunity score 38.0/100) —
+          Logging business expenses into a spreadsheet.
+          Steps: Save receipt; Enter amount; Categorize
+          Actors: Freelancer
+          Competitive landscape: saturation high; competitors: Expensify, Ramp, Brex
+          Gap: No clear underserved angle — the space is well covered.
+  expected:
+    contains: "plans"

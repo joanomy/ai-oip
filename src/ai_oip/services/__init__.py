@@ -19,10 +19,12 @@ from ai_oip.services.opportunity_scoring import (
     weighted_total,
 )
 from ai_oip.services.problem_discovery import ProblemDiscoveryService
+from ai_oip.services.product_recommendation import ProductRecommendationService
 from ai_oip.services.report import (
     render_competition_report,
     render_markdown_report,
     render_opportunity_report,
+    render_recommendation_report,
     render_workflow_report,
 )
 from ai_oip.services.workflow_discovery import WorkflowDiscoveryService
@@ -32,10 +34,12 @@ __all__ = [
     "CompetitionResearchService",
     "OpportunityScoringService",
     "ProblemDiscoveryService",
+    "ProductRecommendationService",
     "WorkflowDiscoveryService",
     "render_competition_report",
     "render_markdown_report",
     "render_opportunity_report",
+    "render_recommendation_report",
     "render_workflow_report",
     "weighted_total",
 ]

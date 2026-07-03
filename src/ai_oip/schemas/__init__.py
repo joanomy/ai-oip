@@ -32,6 +32,15 @@ from ai_oip.schemas.problem_extraction import (
     ProblemExtractionInput,
     ProblemExtractionOutput,
 )
+from ai_oip.schemas.product_recommendation import (
+    CompetitionDetail,
+    ProductPlan,
+    ProductRecommendationInput,
+    ProductRecommendationOutput,
+    RecommendationReport,
+    RecommendationSummary,
+    RecommendationTarget,
+)
 from ai_oip.schemas.report import ProblemFinding, SkeletonReport
 from ai_oip.schemas.workflow_discovery import (
     DiscoveredWorkflow,
@@ -44,6 +53,7 @@ from ai_oip.schemas.workflow_discovery import (
 
 __all__ = [
     "CollectedItem",
+    "CompetitionDetail",
     "CompetitionReport",
     "CompetitionResearchInput",
     "CompetitionResearchOutput",
@@ -60,7 +70,13 @@ __all__ = [
     "ProblemExtractionInput",
     "ProblemExtractionOutput",
     "ProblemFinding",
+    "ProductPlan",
+    "ProductRecommendationInput",
+    "ProductRecommendationOutput",
     "RankedOpportunity",
+    "RecommendationReport",
+    "RecommendationSummary",
+    "RecommendationTarget",
     "ResearchTarget",
     "SkeletonReport",
     "WorkflowCompetition",

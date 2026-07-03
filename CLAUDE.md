@@ -235,7 +235,7 @@ AI-first software company for years to come.
 | M9 -- Workflow Discovery Agent | Complete |
 | M10 -- Opportunity Scoring | Complete |
 | M11 -- Competition Research | Complete |
-| M12 -- Product Recommendation | Next |
+| M12 -- Product Recommendation | Complete |
 | M13 -- ICP Generator | Not started |
 | M14 -- Company Discovery | Not started |
 | M15 -- Executive Report v2 | Not started |
@@ -244,12 +244,17 @@ AI-first software company for years to come.
 | MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
 
 **Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M12..M15 in sequence ->
-MX.1 -> MX.2 -> MX.3. The pipeline is four stages deep with persisted
+Recommended remaining order: M13..M15 in sequence ->
+MX.1 -> MX.2 -> MX.3. The pipeline is five stages deep with persisted
 handoffs, driven by the unified CLI: `ai-oip discover "<query>"` ->
-`ai-oip workflows` -> `ai-oip score` -> `ai-oip research`
-(top opportunities -> competitive landscapes). Every remaining
-milestone extends this working pipeline, each gated on its eval suite.
+`ai-oip workflows` -> `ai-oip score` -> `ai-oip research` ->
+`ai-oip recommend` (top opportunities -> competitive landscapes ->
+build/watch/pass plans). Every remaining milestone extends this
+working pipeline, each gated on its eval suite.
+
+**M12 (Product Recommendation, complete):** build/watch/pass plans for
+scored, competition-assessed opportunities — skips workflows M11
+hasn't researched yet rather than guessing. See ADR-0016.
 
 **Eval discipline (ADR-0006).** Every prompt ships with eval fixtures
 (golden inputs / expected-property outputs) — required and enforced by
@@ -395,7 +400,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0015`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0016`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 

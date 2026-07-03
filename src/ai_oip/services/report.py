@@ -8,6 +8,7 @@ artifact from day one.
 from ai_oip.schemas import (
     CompetitionReport,
     OpportunityReport,
+    RecommendationReport,
     SkeletonReport,
     WorkflowReport,
 )
@@ -79,6 +80,38 @@ def render_competition_report(report: CompetitionReport) -> str:
         if assessment.market_gap:
             lines.append("")
             lines.append(f"**Gap:** {assessment.market_gap}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_recommendation_report(report: RecommendationReport) -> str:
+    """Render a RecommendationReport as a markdown document."""
+    lines = [
+        "# Product Recommendation Report",
+        "",
+        f"- **Opportunities analyzed:** {report.targets_analyzed}",
+        "",
+    ]
+    if not report.recommendations:
+        lines.append("_No researched opportunities were available to recommend on._")
+    for number, rec in enumerate(report.recommendations, start=1):
+        lines.append(
+            f"## {number}. {rec.workflow_name} ({rec.total_score}/100) — "
+            f"{rec.recommendation.upper()}"
+        )
+        lines.append("")
+        lines.append(rec.product_concept)
+        lines.append("")
+        if rec.mvp_scope:
+            lines.append("**MVP scope:**")
+            lines.extend(f"- {step}" for step in rec.mvp_scope)
+            lines.append("")
+        if rec.differentiation:
+            lines.append(f"**Differentiation:** {rec.differentiation}")
+            lines.append("")
+        lines.append(f"_Saturation: {rec.saturation}_")
+        lines.append("")
+        lines.append(f"**Rationale:** {rec.rationale}")
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 

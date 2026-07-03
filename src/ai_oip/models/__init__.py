@@ -12,6 +12,7 @@ from ai_oip.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from ai_oip.models.competition import CompetitionRecord
 from ai_oip.models.opportunity import OpportunityScoreRecord
 from ai_oip.models.problem import ProblemRecord
+from ai_oip.models.product_recommendation import ProductRecommendationRecord
 from ai_oip.models.session import (
     create_engine,
     create_engine_from_settings,
@@ -25,6 +26,7 @@ __all__ = [
     "CompetitionRecord",
     "OpportunityScoreRecord",
     "ProblemRecord",
+    "ProductRecommendationRecord",
     "TimestampMixin",
     "UUIDPrimaryKeyMixin",
     "WorkflowRecord",

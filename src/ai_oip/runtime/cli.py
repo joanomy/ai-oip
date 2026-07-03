@@ -12,6 +12,7 @@ from pathlib import Path
 from ai_oip.config import get_settings
 from ai_oip.logging import configure_logging, get_logger
 from ai_oip.runtime.competition import run_competition_research
+from ai_oip.runtime.product_recommendation import run_product_recommendation
 from ai_oip.runtime.scoring import run_opportunity_scoring
 from ai_oip.runtime.skeleton import run_skeleton
 from ai_oip.runtime.workflows import run_workflow_discovery
@@ -48,6 +49,12 @@ def build_parser() -> argparse.ArgumentParser:
     research.add_argument("--limit", type=int, default=5)
     research.add_argument("--output", type=Path, default=None)
 
+    recommend = subcommands.add_parser(
+        "recommend", help="Recommend build/watch/pass for researched opportunities (stage 5)"
+    )
+    recommend.add_argument("--limit", type=int, default=5)
+    recommend.add_argument("--output", type=Path, default=None)
+
     return parser
 
 
@@ -64,8 +71,10 @@ def main() -> None:  # pragma: no cover — thin argv shell over the run_* funct
         _, markdown = asyncio.run(run_workflow_discovery(limit=args.limit))
     elif args.command == "score":
         _, markdown = asyncio.run(run_opportunity_scoring(limit=args.limit))
-    else:
+    elif args.command == "research":
         _, markdown = asyncio.run(run_competition_research(limit=args.limit))
+    else:
+        _, markdown = asyncio.run(run_product_recommendation(limit=args.limit))
 
     logger.info("pipeline_stage_completed", command=args.command)
     if args.output is not None:
