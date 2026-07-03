@@ -8,9 +8,7 @@ same interface.
 
 from collections.abc import Sequence
 
-from ai_oip.agents.base import BaseAgent, parse_json_output
-from ai_oip.prompts import PromptTemplate
-from ai_oip.providers import CompletionRequest, LLMProvider
+from ai_oip.agents.base import PromptedAgent
 from ai_oip.schemas import (
     CompetitionResearchInput,
     CompetitionResearchOutput,
@@ -35,20 +33,12 @@ def _opportunities_digest(targets: Sequence[ResearchTarget]) -> str:
     return "\n".join(blocks)
 
 
-class CompetitionResearchAgent(BaseAgent[CompetitionResearchInput, CompetitionResearchOutput]):
+class CompetitionResearchAgent(PromptedAgent[CompetitionResearchInput, CompetitionResearchOutput]):
     """Assesses the competitive landscape for top-ranked workflows."""
 
     name = "competition_research"
+    digest_variable = "opportunities_digest"
+    output_schema = CompetitionResearchOutput
 
-    def __init__(self, *, provider: LLMProvider, prompt: PromptTemplate) -> None:
-        self._provider = provider
-        self._prompt = prompt
-
-    async def run(self, input_data: CompetitionResearchInput) -> CompetitionResearchOutput:
-        rendered = self._prompt.render(
-            opportunities_digest=_opportunities_digest(input_data.targets)
-        )
-        response = await self._provider.complete(
-            CompletionRequest(prompt=rendered, system=self._prompt.metadata.role)
-        )
-        return parse_json_output(response.text, CompetitionResearchOutput, agent_name=self.name)
+    def digest(self, input_data: CompetitionResearchInput) -> str:
+        return _opportunities_digest(input_data.targets)

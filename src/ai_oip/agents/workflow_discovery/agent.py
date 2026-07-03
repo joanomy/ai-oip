@@ -7,9 +7,7 @@ output so linkage survives batching.
 
 from collections.abc import Sequence
 
-from ai_oip.agents.base import BaseAgent, parse_json_output
-from ai_oip.prompts import PromptTemplate
-from ai_oip.providers import CompletionRequest, LLMProvider
+from ai_oip.agents.base import PromptedAgent
 from ai_oip.schemas import ProblemDetail, WorkflowDiscoveryInput, WorkflowDiscoveryOutput
 
 
@@ -26,18 +24,12 @@ def _problems_digest(problems: Sequence[ProblemDetail]) -> str:
     return "\n".join(blocks)
 
 
-class WorkflowDiscoveryAgent(BaseAgent[WorkflowDiscoveryInput, WorkflowDiscoveryOutput]):
+class WorkflowDiscoveryAgent(PromptedAgent[WorkflowDiscoveryInput, WorkflowDiscoveryOutput]):
     """Identifies the recurring business workflows behind stored problems."""
 
     name = "workflow_discovery"
+    digest_variable = "problems_digest"
+    output_schema = WorkflowDiscoveryOutput
 
-    def __init__(self, *, provider: LLMProvider, prompt: PromptTemplate) -> None:
-        self._provider = provider
-        self._prompt = prompt
-
-    async def run(self, input_data: WorkflowDiscoveryInput) -> WorkflowDiscoveryOutput:
-        rendered = self._prompt.render(problems_digest=_problems_digest(input_data.problems))
-        response = await self._provider.complete(
-            CompletionRequest(prompt=rendered, system=self._prompt.metadata.role)
-        )
-        return parse_json_output(response.text, WorkflowDiscoveryOutput, agent_name=self.name)
+    def digest(self, input_data: WorkflowDiscoveryInput) -> str:
+        return _problems_digest(input_data.problems)

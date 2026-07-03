@@ -252,6 +252,15 @@ them with contains / not_contains / matches semantics (ADR-0008). From
 M8 onward, "no concrete agent ships without an eval suite" is a
 quality gate with the same standing as the coverage floor.
 
+**Consolidation (post-M11 review, ADR-0014):** `PromptedAgent`
+(agents/base/prompted.py) owns the digest -> render -> complete ->
+parse frame — concrete agents supply name, digest_variable,
+output_schema, digest(). `stage_context` (runtime/composition.py)
+owns the stage lifecycle (dependency resolution, unit-of-work,
+owned-engine disposal). New agents/stages MUST build on these unless
+they genuinely don't fit (then implement BaseAgent directly and note
+why). Repository-read and digest dedup deliberately deferred.
+
 **Competition research detail (M11, complete):** model-knowledge-only
 v1 (CEO decision; web-search grounding is the planned v2 behind the
 same interface — trigger: observed stale assessments, ADR-0013).
@@ -362,7 +371,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0013`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0014`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 

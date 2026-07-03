@@ -7,9 +7,7 @@ service, so tuning weights never touches a prompt.
 
 from collections.abc import Sequence
 
-from ai_oip.agents.base import BaseAgent, parse_json_output
-from ai_oip.prompts import PromptTemplate
-from ai_oip.providers import CompletionRequest, LLMProvider
+from ai_oip.agents.base import PromptedAgent
 from ai_oip.schemas import (
     OpportunityScoringInput,
     OpportunityScoringOutput,
@@ -31,18 +29,12 @@ def _workflows_digest(workflows: Sequence[WorkflowDetail]) -> str:
     return "\n".join(blocks)
 
 
-class OpportunityScoringAgent(BaseAgent[OpportunityScoringInput, OpportunityScoringOutput]):
+class OpportunityScoringAgent(PromptedAgent[OpportunityScoringInput, OpportunityScoringOutput]):
     """Scores discovered workflows on the five opportunity dimensions."""
 
     name = "opportunity_scoring"
+    digest_variable = "workflows_digest"
+    output_schema = OpportunityScoringOutput
 
-    def __init__(self, *, provider: LLMProvider, prompt: PromptTemplate) -> None:
-        self._provider = provider
-        self._prompt = prompt
-
-    async def run(self, input_data: OpportunityScoringInput) -> OpportunityScoringOutput:
-        rendered = self._prompt.render(workflows_digest=_workflows_digest(input_data.workflows))
-        response = await self._provider.complete(
-            CompletionRequest(prompt=rendered, system=self._prompt.metadata.role)
-        )
-        return parse_json_output(response.text, OpportunityScoringOutput, agent_name=self.name)
+    def digest(self, input_data: OpportunityScoringInput) -> str:
+        return _workflows_digest(input_data.workflows)

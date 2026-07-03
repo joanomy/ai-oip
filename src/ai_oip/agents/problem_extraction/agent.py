@@ -10,9 +10,7 @@ batching.
 
 from collections.abc import Sequence
 
-from ai_oip.agents.base import BaseAgent, parse_json_output
-from ai_oip.prompts import PromptTemplate
-from ai_oip.providers import CompletionRequest, LLMProvider
+from ai_oip.agents.base import PromptedAgent
 from ai_oip.schemas import CollectedItem, ProblemExtractionInput, ProblemExtractionOutput
 
 _MAX_ITEM_TEXT_CHARS = 1500
@@ -32,18 +30,12 @@ def _items_digest(items: Sequence[CollectedItem]) -> str:
     return "\n\n".join(blocks)
 
 
-class ProblemExtractionAgent(BaseAgent[ProblemExtractionInput, ProblemExtractionOutput]):
+class ProblemExtractionAgent(PromptedAgent[ProblemExtractionInput, ProblemExtractionOutput]):
     """Extracts concrete problems people describe in collected items."""
 
     name = "problem_extraction"
+    digest_variable = "items_digest"
+    output_schema = ProblemExtractionOutput
 
-    def __init__(self, *, provider: LLMProvider, prompt: PromptTemplate) -> None:
-        self._provider = provider
-        self._prompt = prompt
-
-    async def run(self, input_data: ProblemExtractionInput) -> ProblemExtractionOutput:
-        rendered = self._prompt.render(items_digest=_items_digest(input_data.items))
-        response = await self._provider.complete(
-            CompletionRequest(prompt=rendered, system=self._prompt.metadata.role)
-        )
-        return parse_json_output(response.text, ProblemExtractionOutput, agent_name=self.name)
+    def digest(self, input_data: ProblemExtractionInput) -> str:
+        return _items_digest(input_data.items)
