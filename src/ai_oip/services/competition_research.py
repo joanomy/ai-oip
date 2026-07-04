@@ -43,7 +43,14 @@ class CompetitionResearchService:
         summaries: list[CompetitionSummary] = []
         if targets:
             with log_agent_run(self._agent.name):
-                output = await self._agent.run(CompetitionResearchInput(targets=targets))
+                output, response = await self._agent.run_detailed(
+                    CompetitionResearchInput(targets=targets)
+                )
+            # Batch-level provenance: one completion covers every target
+            # in this run, so the same source list attaches to each
+            # persisted assessment (R1/ADR-0018) — never per-target,
+            # since the model cannot attribute sources per competitor.
+            sources = response.sources if self._agent.grounded else None
 
             for assessment in output.assessments:
                 if not 1 <= assessment.workflow_index <= len(targets):
@@ -53,6 +60,7 @@ class CompetitionResearchService:
                     assessment,
                     workflow_id=target.workflow.id,
                     workflow_name=target.workflow.name,
+                    sources=sources,
                 )
                 summaries.append(
                     CompetitionSummary(
@@ -61,10 +69,15 @@ class CompetitionResearchService:
                         saturation=assessment.saturation,
                         market_gap=assessment.market_gap,
                         competitors=assessment.competitors,
+                        sources=sources or (),
                     )
                 )
 
-        return CompetitionReport(targets_analyzed=len(targets), assessments=summaries)
+        return CompetitionReport(
+            targets_analyzed=len(targets),
+            assessments=summaries,
+            grounded=self._agent.grounded,
+        )
 
     async def _build_targets(self, limit: int) -> list[ResearchTarget]:
         """Top scores joined with workflow details, deduped by workflow.

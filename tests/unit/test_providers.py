@@ -18,6 +18,7 @@ from ai_oip.providers import (
     CompletionRequest,
     CompletionResponse,
     LLMProvider,
+    WebSearchOptions,
     anthropic_provider_from_settings,
 )
 
@@ -38,9 +39,26 @@ def _stub_response(text: str = "Hello!") -> SimpleNamespace:
     )
 
 
+def _web_search_result(url: str) -> SimpleNamespace:
+    return SimpleNamespace(type="web_search_result", url=url, title="t", encrypted_content="c")
+
+
+def _web_search_tool_result(results: list[SimpleNamespace] | SimpleNamespace) -> SimpleNamespace:
+    return SimpleNamespace(type="web_search_tool_result", content=results)
+
+
 class FakeMessages:
-    def __init__(self, response=None, error: Exception | None = None):
+    """Returns `response` for every call, or the next of `responses` in order."""
+
+    def __init__(
+        self,
+        response=None,
+        *,
+        responses: list[SimpleNamespace] | None = None,
+        error: Exception | None = None,
+    ):
         self.response = response
+        self._responses = iter(responses) if responses is not None else None
         self.error = error
         self.calls: list[dict] = []
 
@@ -48,7 +66,7 @@ class FakeMessages:
         self.calls.append(kwargs)
         if self.error is not None:
             raise self.error
-        return self.response
+        return next(self._responses) if self._responses is not None else self.response
 
 
 def _provider(messages: FakeMessages) -> AnthropicProvider:
@@ -133,3 +151,125 @@ async def test_provider_from_settings_without_key_fails_fast() -> None:
 
     with pytest.raises(ConfigurationError):
         anthropic_provider_from_settings(settings)
+
+
+class TestWebSearchGrounding:
+    """R1 (ADR-0018): the web-search tool mapping and source extraction."""
+
+    async def test_no_web_search_option_omits_tools(self) -> None:
+        messages = FakeMessages(response=_stub_response())
+        provider = _provider(messages)
+
+        await provider.complete(CompletionRequest(prompt="x"))
+
+        assert messages.calls[0]["tools"] is anthropic.omit
+
+    async def test_web_search_option_declares_the_server_tool(self) -> None:
+        messages = FakeMessages(response=_stub_response())
+        provider = _provider(messages)
+
+        await provider.complete(
+            CompletionRequest(
+                prompt="x",
+                web_search=WebSearchOptions(max_uses=7, allowed_domains=("example.com",)),
+            )
+        )
+
+        tools = messages.calls[0]["tools"]
+        assert tools == [
+            {
+                "type": "web_search_20260209",
+                "name": "web_search",
+                "max_uses": 7,
+                "allowed_domains": ["example.com"],
+            }
+        ]
+
+    async def test_sources_extracted_from_search_result_blocks_deduped(self) -> None:
+        response = SimpleNamespace(
+            content=[
+                _web_search_tool_result(
+                    [
+                        _web_search_result("https://a.example"),
+                        _web_search_result("https://b.example"),
+                    ]
+                ),
+                SimpleNamespace(type="text", text="Answer."),
+                _web_search_tool_result([_web_search_result("https://a.example")]),  # dup
+            ],
+            model=MODEL,
+            stop_reason="end_turn",
+            usage=SimpleNamespace(input_tokens=1, output_tokens=1),
+        )
+        messages = FakeMessages(response=response)
+        provider = _provider(messages)
+
+        result = await provider.complete(
+            CompletionRequest(prompt="x", web_search=WebSearchOptions())
+        )
+
+        assert result.sources == ("https://a.example", "https://b.example")
+
+    async def test_search_error_block_yields_no_sources(self) -> None:
+        response = SimpleNamespace(
+            content=[
+                _web_search_tool_result(SimpleNamespace(error_code="max_uses_exceeded")),
+                SimpleNamespace(type="text", text="Answer anyway."),
+            ],
+            model=MODEL,
+            stop_reason="end_turn",
+            usage=SimpleNamespace(input_tokens=1, output_tokens=1),
+        )
+        provider = _provider(FakeMessages(response=response))
+
+        result = await provider.complete(
+            CompletionRequest(prompt="x", web_search=WebSearchOptions())
+        )
+
+        assert result.sources == ()
+        assert result.text == "Answer anyway."
+
+    async def test_pause_turn_is_continued_and_usage_accumulates(self) -> None:
+        first = SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="partial ")],
+            model=MODEL,
+            stop_reason="pause_turn",
+            usage=SimpleNamespace(input_tokens=10, output_tokens=5),
+        )
+        second = SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="rest.")],
+            model=MODEL,
+            stop_reason="end_turn",
+            usage=SimpleNamespace(input_tokens=3, output_tokens=7),
+        )
+        messages = FakeMessages(responses=[first, second])
+        provider = _provider(messages)
+
+        result = await provider.complete(
+            CompletionRequest(prompt="x", web_search=WebSearchOptions())
+        )
+
+        assert result.text == "partial rest."
+        assert result.stop_reason == "end_turn"
+        assert result.usage.input_tokens == 13
+        assert result.usage.output_tokens == 12
+        assert len(messages.calls) == 2
+        # Second call echoes the paused assistant turn back unchanged.
+        assert messages.calls[1]["messages"][-1] == {
+            "role": "assistant",
+            "content": first.content,
+        }
+
+    async def test_pause_turn_beyond_the_bound_raises_provider_error(self) -> None:
+        forever_paused = SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="still going")],
+            model=MODEL,
+            stop_reason="pause_turn",
+            usage=SimpleNamespace(input_tokens=1, output_tokens=1),
+        )
+        # Enough responses for every allowed attempt, all still pausing.
+        messages = FakeMessages(responses=[forever_paused] * 10)
+        provider = _provider(messages)
+
+        with pytest.raises(ProviderError, match="pause_turn"):
+            await provider.complete(CompletionRequest(prompt="x", web_search=WebSearchOptions()))

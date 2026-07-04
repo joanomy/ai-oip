@@ -51,6 +51,26 @@ def render_markdown_report(report: SkeletonReport) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _competition_banner(report: CompetitionReport) -> list[str]:
+    """The honesty banner — grounded (R1) or knowledge-lag (v1, ADR-0013).
+
+    Grounding reduces staleness; it does not eliminate the need to
+    verify, so both banners keep an explicit verify-before-acting note.
+    """
+    if report.grounded:
+        source_count = len({source for a in report.assessments for source in a.sources})
+        return [
+            "_Assessments are grounded in live web search performed during",
+            f"this run ({source_count} source{'s' if source_count != 1 else ''} consulted)."
+            " Search coverage is bounded per run — verify critical claims",
+            "independently before acting._",
+        ]
+    return [
+        "_Assessments reflect model training knowledge and may lag the",
+        "live market — verify before acting on them._",
+    ]
+
+
 def render_competition_report(report: CompetitionReport) -> str:
     """Render a CompetitionReport as a markdown document."""
     lines = [
@@ -58,8 +78,7 @@ def render_competition_report(report: CompetitionReport) -> str:
         "",
         f"- **Opportunities analyzed:** {report.targets_analyzed}",
         "",
-        "_Assessments reflect model training knowledge and may lag the",
-        "live market — verify before acting on them._",
+        *_competition_banner(report),
         "",
     ]
     if not report.assessments:

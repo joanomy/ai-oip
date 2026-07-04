@@ -1,5 +1,6 @@
 """Repository for competition assessments — schemas in, schemas out."""
 
+from collections.abc import Sequence
 from typing import Literal, cast
 from uuid import UUID
 
@@ -57,8 +58,15 @@ class CompetitionRepository(SQLAlchemyRepository[CompetitionRecord]):
         *,
         workflow_id: UUID,
         workflow_name: str,
+        sources: Sequence[str] | None = None,
     ) -> None:
-        """Persist one workflow's competitive assessment."""
+        """Persist one workflow's competitive assessment.
+
+        `sources` is None for an ungrounded run (v1, ADR-0013) and a
+        (possibly empty) list for a grounded run (R1, ADR-0018) — the
+        column stays nullable so "not grounded" and "grounded, found
+        nothing" remain distinguishable in stored data.
+        """
         record = CompetitionRecord(
             workflow_id=workflow_id,
             workflow_name=workflow_name,
@@ -72,5 +80,6 @@ class CompetitionRepository(SQLAlchemyRepository[CompetitionRecord]):
                 }
                 for competitor in assessment.competitors
             ],
+            sources=list(sources) if sources is not None else None,
         )
         await self.save(record)

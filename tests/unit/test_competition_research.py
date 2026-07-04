@@ -12,6 +12,7 @@ from ai_oip.core.exceptions import AgentExecutionError
 from ai_oip.evals import prompt_completion_target, run_eval_cases
 from ai_oip.models import create_session_factory
 from ai_oip.prompts import PromptLoader
+from ai_oip.providers import WebSearchOptions
 from ai_oip.repositories import (
     CompetitionRepository,
     OpportunityRepository,
@@ -83,10 +84,17 @@ async def _seed_scored_workflows(session: AsyncSession, scores: list[int]) -> No
         )
 
 
-def _service(db_session: AsyncSession, provider: FakeProvider) -> CompetitionResearchService:
+def _service(
+    db_session: AsyncSession,
+    provider: FakeProvider,
+    *,
+    web_search: WebSearchOptions | None = None,
+) -> CompetitionResearchService:
     return CompetitionResearchService(
         agent=CompetitionResearchAgent(
-            provider=provider, prompt=PromptLoader().load("research_competition")
+            provider=provider,
+            prompt=PromptLoader().load("research_competition"),
+            web_search=web_search,
         ),
         opportunity_repository=OpportunityRepository(db_session),
         workflow_repository=WorkflowRepository(db_session),
@@ -99,9 +107,29 @@ class TestPromptAndAgent:
         prompt = PromptLoader().load("research_competition")
 
         assert prompt.metadata.name == "research_competition"
+        # v2 (R1, ADR-0018) is the latest/default version.
+        assert prompt.metadata.version == 2
         assert prompt.variables == {"opportunities_digest"}
         # The honesty constraints are load-bearing — pin them.
         assert "NEVER invent" in "\n".join(prompt.metadata.validation_rules)
+
+    async def test_v2_prompt_requires_grounding(self) -> None:
+        # Pinned per ADR-0018: v2's honesty constraint is search-first,
+        # not just never-invent — a prompt edit that silently drops the
+        # grounding instruction should fail this test.
+        prompt = PromptLoader().load("research_competition", version=2)
+
+        assert "search" in prompt.metadata.role.lower()
+        assert "search the web" in prompt.metadata.objective.lower()
+
+    async def test_v1_prompt_still_loadable_as_history(self) -> None:
+        # ADR-0007: prompt versions are retained, diffable history —
+        # v1 (model-knowledge-only, ADR-0013) stays loadable by number
+        # even though v2 is now the default.
+        prompt = PromptLoader().load("research_competition", version=1)
+
+        assert prompt.metadata.version == 1
+        assert "search" not in prompt.metadata.role.lower()
 
     async def test_agent_renders_digest_and_parses(self, db_session) -> None:
         await _seed_scored_workflows(db_session, scores=[8])
@@ -138,6 +166,31 @@ class TestPromptAndAgent:
         report = await run_eval_cases(target, cases)
 
         assert report.passed is True
+
+    async def test_agent_ungrounded_by_default(self) -> None:
+        provider = FakeProvider(ASSESSMENT_OUTPUT)
+        agent = CompetitionResearchAgent(
+            provider=provider, prompt=PromptLoader().load("research_competition")
+        )
+
+        assert agent.grounded is False
+        await agent.run(CompetitionResearchInput(targets=[]))
+        assert provider.requests[0].web_search is None
+
+    async def test_agent_grounded_attaches_web_search_to_the_request(self) -> None:
+        provider = FakeProvider(ASSESSMENT_OUTPUT, sources=("https://a.example",))
+        agent = CompetitionResearchAgent(
+            provider=provider,
+            prompt=PromptLoader().load("research_competition"),
+            web_search=WebSearchOptions(max_uses=3),
+        )
+
+        assert agent.grounded is True
+        output, response = await agent.run_detailed(CompetitionResearchInput(targets=[]))
+
+        assert provider.requests[0].web_search == WebSearchOptions(max_uses=3)
+        assert response.sources == ("https://a.example",)
+        assert output.assessments  # parsed same as the ungrounded path
 
 
 class TestService:
@@ -191,9 +244,65 @@ class TestService:
         assert report.targets_analyzed == 0
         assert provider.requests == []
 
+    async def test_ungrounded_run_persists_no_sources(self, db_session) -> None:
+        await _seed_scored_workflows(db_session, scores=[9])
+        service = _service(db_session, FakeProvider(ASSESSMENT_OUTPUT))
+
+        report = await service.research(limit=5)
+
+        assert report.grounded is False
+        assert report.assessments[0].sources == ()
+        rows = await CompetitionRepository(db_session).list_all()
+        assert rows[0].sources is None
+
+    async def test_grounded_run_persists_batch_level_sources(self, db_session) -> None:
+        await _seed_scored_workflows(db_session, scores=[9])
+        sources = ("https://vendor-a.example", "https://vendor-b.example")
+        service = _service(
+            db_session,
+            FakeProvider(ASSESSMENT_OUTPUT, sources=sources),
+            web_search=WebSearchOptions(max_uses=4),
+        )
+
+        report = await service.research(limit=5)
+
+        assert report.grounded is True
+        assert report.assessments[0].sources == sources
+        rows = await CompetitionRepository(db_session).list_all()
+        assert rows[0].sources == list(sources)
+
 
 class TestRuntimeAndReport:
-    async def test_end_to_end_on_sqlite(self, db_engine: AsyncEngine) -> None:
+    async def test_end_to_end_on_sqlite_is_grounded_by_default(
+        self, db_engine: AsyncEngine
+    ) -> None:
+        factory = create_session_factory(db_engine)
+        async with factory() as session:
+            await _seed_scored_workflows(session, scores=[7])
+            await session.commit()
+
+        provider = FakeProvider(ASSESSMENT_OUTPUT, sources=("https://vendor.example",))
+        report, markdown = await run_competition_research(
+            limit=5,
+            settings=Settings(_env_file=None),
+            engine=db_engine,
+            provider=provider,
+        )
+
+        assert report.targets_analyzed == 1
+        assert report.grounded is True
+        assert "# Competition Research Report" in markdown
+        assert "saturation: medium" in markdown
+        assert "**Acme OCR**: Invoice data extraction — Mid-market accounting teams" in markdown
+        assert "**Gap:** No SMB-priced option" in markdown
+        assert "grounded in live web search" in markdown  # R1 honesty banner
+        assert "1 source consulted" in markdown
+        # Defaults to Settings.competition_research_web_search_max_uses.
+        assert provider.requests[0].web_search.max_uses == 5
+
+    async def test_end_to_end_ungrounded_keeps_the_knowledge_lag_banner(
+        self, db_engine: AsyncEngine
+    ) -> None:
         factory = create_session_factory(db_engine)
         async with factory() as session:
             await _seed_scored_workflows(session, scores=[7])
@@ -201,17 +310,33 @@ class TestRuntimeAndReport:
 
         report, markdown = await run_competition_research(
             limit=5,
+            grounded=False,
             settings=Settings(_env_file=None),
             engine=db_engine,
             provider=FakeProvider(ASSESSMENT_OUTPUT),
         )
 
-        assert report.targets_analyzed == 1
-        assert "# Competition Research Report" in markdown
-        assert "saturation: medium" in markdown
-        assert "**Acme OCR**: Invoice data extraction — Mid-market accounting teams" in markdown
-        assert "**Gap:** No SMB-priced option" in markdown
-        assert "may lag the" in markdown  # honesty banner always present
+        assert report.grounded is False
+        assert "may lag the" in markdown  # v1 honesty banner, still available on request
+
+    async def test_explicit_max_uses_overrides_settings_default(
+        self, db_engine: AsyncEngine
+    ) -> None:
+        factory = create_session_factory(db_engine)
+        async with factory() as session:
+            await _seed_scored_workflows(session, scores=[7])
+            await session.commit()
+
+        provider = FakeProvider(ASSESSMENT_OUTPUT)
+        await run_competition_research(
+            limit=5,
+            web_search_max_uses=2,
+            settings=Settings(_env_file=None),
+            engine=db_engine,
+            provider=provider,
+        )
+
+        assert provider.requests[0].web_search.max_uses == 2
 
     async def test_report_renders_empty_state(self) -> None:
         from ai_oip.schemas import CompetitionReport

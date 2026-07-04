@@ -76,6 +76,11 @@ class CompetitionSummary(BaseModel):
     saturation: Literal["low", "medium", "high"]
     market_gap: str | None
     competitors: list[Competitor]
+    #: Web sources consulted during the run that produced this
+    #: assessment (R1/ADR-0018) — batch-level provenance extracted by
+    #: the provider from search-tool results, never model-authored
+    #: text. Empty when the run was ungrounded (pre-R1 behavior).
+    sources: tuple[str, ...] = ()
 
 
 class CompetitionReport(BaseModel):
@@ -85,3 +90,8 @@ class CompetitionReport(BaseModel):
 
     targets_analyzed: int
     assessments: list[CompetitionSummary]
+    #: True if this run's assessments were grounded in live web search
+    #: (R1) rather than model knowledge alone (v1, ADR-0013). Drives the
+    #: report banner — grounded runs get a "grounded as of" note instead
+    #: of the knowledge-lag disclaimer.
+    grounded: bool = False

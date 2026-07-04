@@ -219,7 +219,7 @@ AI-first software company for years to come.
 
 # PART 2 -- PROJECT STATE (AI-OIP)
 
-## Current Milestone Status (roadmap v3: renumbered + research-adjusted 2026-07-02, see ADR-0006)
+## Current Milestone Status (roadmap v4: revenue-first reordering 2026-07-03, see ADR-0017; numbering from v3, ADR-0006)
 
 | Milestone | Status |
 |---|---|
@@ -236,21 +236,55 @@ AI-first software company for years to come.
 | M10 -- Opportunity Scoring | Complete |
 | M11 -- Competition Research | Complete |
 | M12 -- Product Recommendation | Complete |
-| M13 -- ICP Generator | Not started |
-| M14 -- Company Discovery | Not started |
-| M15 -- Executive Report v2 | Not started |
-| MX.1 -- Scheduled Runs, Human-in-the-Loop | Not started |
-| MX.2 -- Human-on-the-Loop (exception review) | Not started |
-| MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Not started |
+| R1 -- Web-Grounded Competition Research (ADR-0013 v2) | Complete |
+| R2 -- Collector Breadth (2-3 sources beyond HN) | Not started |
+| R3 -- Report v2 + Cost Telemetry (the sellable deliverable) | Not started |
+| SALES GATE -- 10 design-partner conversations, 3 paid pilots | Blocked on R3 |
+| M13 -- ICP Generator | Postponed as a stage (ADR-0017; judgment may land as R3 report content) |
+| M14 -- Company Discovery | Cut (ADR-0017) |
+| M15 -- Executive Report v2 | Superseded by R3 (ADR-0017) |
+| MX.1 -- Scheduled Runs, Human-in-the-Loop | Postponed (ADR-0017; trigger ~20 subscribers or weekly-run strain) |
+| MX.2 -- Human-on-the-Loop (exception review) | Postponed (ADR-0017) |
+| MX.3 -- Bounded Autonomy (budgets, guardrails, escalation) | Postponed (ADR-0017) |
 
-**Execution order is dependency-driven, not strictly numeric.**
-Recommended remaining order: M13..M15 in sequence ->
-MX.1 -> MX.2 -> MX.3. The pipeline is five stages deep with persisted
-handoffs, driven by the unified CLI: `ai-oip discover "<query>"` ->
-`ai-oip workflows` -> `ai-oip score` -> `ai-oip research` ->
-`ai-oip recommend` (top opportunities -> competitive landscapes ->
-build/watch/pass plans). Every remaining milestone extends this
-working pipeline, each gated on its eval suite.
+**R1 (Web-Grounded Competition Research, complete):** ADR-0013's v2,
+delivered exactly as scoped there — `LLMProvider` grew
+`web_search`/`sources` fields (provider-agnostic; the Anthropic
+implementation maps to the server-side `web_search_20260209` tool, no
+client-side tool loop), `research_competition` shipped a v2 prompt
+(search-first, honesty constraints carried forward from ADR-0013,
+"NEVER invent" still pinned by test), and `PromptedAgent` grew a
+`run_detailed()` widening (returns the raw `CompletionResponse`
+alongside the parsed output) so agents can surface response metadata
+without a second frame. Grounded is now the default
+(`run_competition_research(..., grounded=True)`); ungrounded (v1)
+stays one parameter away. Sources are batch-level (one completion
+covers a whole research batch, ADR-0013 §4's existing digest shape)
+and persisted in a nullable `competition_assessments.sources` column
+(migration 0006) — null means "never grounded," empty list means
+"grounded, found nothing," keeping that distinction honest. Two report
+banners: v1's knowledge-lag disclaimer, or R1's grounded banner naming
+the source count, both still telling the reader to verify. See
+ADR-0018.
+
+**Execution order (roadmap v4, ADR-0017): R1 -> R2 -> R3 -> STOP
+BUILDING AND SELL.** After R3, no further engineering until the sales
+gate resolves (10 design-partner conversations, 3 paid pilots). The
+pipeline is five stages deep with persisted handoffs, driven by the
+unified CLI: `ai-oip discover "<query>"` -> `ai-oip workflows` ->
+`ai-oip score` -> `ai-oip research` -> `ai-oip recommend` (top
+opportunities -> competitive landscapes -> build/watch/pass plans).
+R1-R3 extend this working pipeline, each gated on its eval suite —
+the quality bar is unchanged by the reordering.
+
+**Roadmap v4 / commercial context (ADR-0017):** first product is the
+"AI Opportunity Briefing" — recurring vertical-specific opportunity
+reports sold concierge (Stripe link + email; no SaaS surface) to AI
+dev agencies/consultancies first. The report IS the product, hence R3.
+Concierge operation satisfies HITL rung 1, hence MX postponed. The
+consolidation-review rhythm is paused until R3 ships, then a review is
+committed (R2 stamps collectors #2-#4). PMF evidence and the
+Product-#2 gate are recorded in ADR-0017 §6.
 
 **M12 (Product Recommendation, complete):** build/watch/pass plans for
 scored, competition-assessed opportunities — skips workflows M11
@@ -291,7 +325,8 @@ why). Repository-read and digest dedup deliberately deferred.
 
 **Competition research detail (M11, complete):** model-knowledge-only
 v1 (CEO decision; web-search grounding is the planned v2 behind the
-same interface — trigger: observed stale assessments, ADR-0013).
+same interface — trigger: observed stale assessments, ADR-0013;
+trigger declared fired on commercial grounds by ADR-0017 → R1).
 Honesty constraints are load-bearing: the prompt forbids invented
 competitors and stale specifics (pinned by test); the report always
 carries a knowledge-lag banner; `saturation` is a Literal enum. First
@@ -400,7 +435,7 @@ during the post-database-layer engineering review; ADR-0002 originally
 misstated this sequence and has a correction note).
 
 Full history and reasoning behind every decision:
-`docs/architecture/ADR-0001` through `ADR-0016`. Read the relevant ADR
+`docs/architecture/ADR-0001` through `ADR-0018`. Read the relevant ADR
 before changing a decision it documents, rather than re-litigating from
 scratch.
 

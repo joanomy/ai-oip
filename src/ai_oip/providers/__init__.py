@@ -16,6 +16,7 @@ from ai_oip.providers.base import (
     CompletionResponse,
     LLMProvider,
     TokenUsage,
+    WebSearchOptions,
 )
 
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
     "CompletionResponse",
     "LLMProvider",
     "TokenUsage",
+    "WebSearchOptions",
     "anthropic_provider_from_settings",
 ]

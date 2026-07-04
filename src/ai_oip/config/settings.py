@@ -102,6 +102,16 @@ class Settings(BaseSettings):
             "Overridable per request via CompletionRequest.model."
         ),
     )
+    competition_research_web_search_max_uses: int = Field(
+        default=5,
+        ge=1,
+        description=(
+            "Upper bound on web searches per competition-research "
+            "completion (R1, ADR-0018) — the cost knob for grounded "
+            "assessments. A value, not a structural choice, so it is "
+            "configuration rather than code."
+        ),
+    )
 
     @field_validator("anthropic_api_key", mode="before")
     @classmethod

@@ -19,3 +19,8 @@ class CompetitionRecord(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     market_gap: Mapped[str | None] = mapped_column(Text)
     #: [{"name": ..., "offering": ..., "positioning": ...}]
     competitors: Mapped[list[dict[str, object]]] = mapped_column(JSON)
+    #: Web source URLs consulted during a grounded run (R1); null for
+    #: ungrounded (v1) assessments — nullable, not a default empty
+    #: list, so "no grounding happened" stays distinguishable from
+    #: "grounding happened and found nothing".
+    sources: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)

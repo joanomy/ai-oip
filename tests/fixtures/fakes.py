@@ -25,12 +25,13 @@ def make_item(index: int = 1, *, text: str | None = "Some body text.") -> Collec
 
 
 class FakeProvider(LLMProvider):
-    """Returns canned text; records every request it receives."""
+    """Returns canned text (and optionally sources); records every request it receives."""
 
     name = "fake"
 
-    def __init__(self, text: str) -> None:
+    def __init__(self, text: str, *, sources: tuple[str, ...] = ()) -> None:
         self.text = text
+        self.sources = sources
         self.requests: list[CompletionRequest] = []
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
@@ -40,6 +41,7 @@ class FakeProvider(LLMProvider):
             model="fake-model",
             stop_reason="end_turn",
             usage=TokenUsage(input_tokens=10, output_tokens=20),
+            sources=self.sources,
         )
 
 

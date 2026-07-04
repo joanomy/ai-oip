@@ -6,10 +6,11 @@ implementation of this interface, not a sweep through agent code
 (CLAUDE.md: "Design every component so AI providers can be replaced
 with minimal code change").
 
-Deliberately minimal at this milestone: one method, text in / text out
-plus usage accounting. Tool use, streaming, and structured-output
-support get added here when a concrete agent actually needs them,
-not speculatively.
+Deliberately minimal: one method, text in / text out plus usage
+accounting. Capabilities get added here when a concrete agent actually
+needs them, not speculatively — web-search grounding arrived at R1
+(ADR-0018) because grounded competition research needed it; streaming
+and structured outputs still wait for their first consumer.
 """
 
 from abc import ABC, abstractmethod
@@ -28,6 +29,27 @@ class TokenUsage(BaseModel):
     @property
     def total_tokens(self) -> int:
         return self.input_tokens + self.output_tokens
+
+
+class WebSearchOptions(BaseModel):
+    """Provider-agnostic web-search grounding options (R1, ADR-0018).
+
+    How a vendor grounds a completion (which tool version, how results
+    come back) is that provider's concern; callers only say *that* they
+    want grounding and how much of it.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    max_uses: int = Field(
+        default=5,
+        ge=1,
+        description="Upper bound on searches per completion — the cost knob.",
+    )
+    allowed_domains: tuple[str, ...] | None = Field(
+        default=None,
+        description="If set, restrict results to these domains.",
+    )
 
 
 class CompletionRequest(BaseModel):
@@ -54,6 +76,13 @@ class CompletionRequest(BaseModel):
             "answering. On by default per current provider guidance."
         ),
     )
+    web_search: WebSearchOptions | None = Field(
+        default=None,
+        description=(
+            "Ground the completion in live web search. None means "
+            "model knowledge only (the pre-R1 behavior)."
+        ),
+    )
 
 
 class CompletionResponse(BaseModel):
@@ -65,6 +94,15 @@ class CompletionResponse(BaseModel):
     model: str
     stop_reason: str | None
     usage: TokenUsage
+    sources: tuple[str, ...] = Field(
+        default=(),
+        description=(
+            "URLs of web sources the provider actually consulted for a "
+            "grounded completion — extracted from tool results by code, "
+            "never taken from model output (provenance is a fact, not a "
+            "judgment). Empty for ungrounded completions."
+        ),
+    )
 
 
 class LLMProvider(ABC):
