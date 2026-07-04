@@ -1,13 +1,79 @@
-# AI-OIP
+# AI-OIP — AI Opportunity Intelligence Platform
 
-Production-grade Python platform for autonomously executing AI workflows via
-modular, single-responsibility agents.
+**In plain English:** this project reads real complaints people post
+online about repetitive, painful work, works out which of those
+problems an AI product could realistically fix, checks whether someone
+is already building that solution, and hands back a report saying
+*build this*, *watch this*, or *skip this* — with the reasoning behind
+each call.
 
-**Status:** Platform (M0–M7) plus five pipeline stages (M8–M12)
-complete, driven by one CLI: `ai-oip discover "<query>"` →
-`ai-oip workflows` → `ai-oip score` → `ai-oip research` →
-`ai-oip recommend` (build/watch/pass plans for scored,
-competition-assessed opportunities). Next up: M13 ICP Generator.
+### What is it?
+
+An automated research pipeline that finds AI product ideas instead of
+someone guessing them. Feed it a topic, and it comes back with a
+ranked list of business opportunities, each backed by evidence: real
+complaints, a feasibility score, and a check on existing competitors.
+
+### Who is it for?
+
+AI development agencies and consultancies who want a steady stream of
+vetted "problems worth solving with AI" instead of guessing what to
+build next.
+
+### Why does it exist?
+
+Coming up with a validated AI product idea is slow, manual work: read
+forums, guess at pain points, search for competitors by hand, decide
+if it's worth building. This automates that legwork so an agency can
+skip straight to the decision.
+
+### Which problems does it look at?
+
+Only ones with evidence behind them — real posts from real people
+complaining about a task, not hypothetical pain points. Each one gets
+scored on how painful it is, how automatable it is, how many people
+have it, and whether they'd pay to fix it.
+
+### When do you use it?
+
+Today: on demand, one topic at a time (`ai-oip discover "<query>"`
+kicks off a run). Scheduled, recurring reports are a planned future
+step, not built yet.
+
+### Where does it get its answers from?
+
+Real posts from Hacker News today (more sources are the next thing
+being added), plus a live web search when checking for competitors —
+so the competitive check reflects what's true right now, not just
+what an AI model happened to learn during training.
+
+### How does it work?
+
+One pipeline, five steps, each feeding the next:
+
+1. **Discover** — collect real problems people post about online.
+2. **Find workflows** — group those problems into repeatable tasks an
+   AI product could target.
+3. **Score** — rate each opportunity on pain, automatability, market
+   size, and willingness to pay.
+4. **Research competition** — check who's already solving it, using
+   live web search so the answer isn't limited to stale AI training
+   data.
+5. **Recommend** — turn all of that into a build / watch / pass call,
+   with reasoning.
+
+Run end to end with one command-line tool:
+`ai-oip discover "<query>"` → `ai-oip workflows` → `ai-oip score` →
+`ai-oip research` → `ai-oip recommend`.
+
+## Current status
+
+The five-step pipeline above is fully built and working end to end,
+including live web search for the competition-research step. Work now
+is focused on making the reports good enough to sell — more data
+sources beyond Hacker News, a polished report format, and clear
+cost-per-report tracking — before any more features get built. See
+the status table below for the detailed roadmap.
 
 ## Setup
 
@@ -57,6 +123,10 @@ uv run ai-oip score --output opportunities.md
 uv run ai-oip research --output competition.md
 uv run ai-oip recommend --output recommendations.md
 ```
+
+---
+
+Everything below this line is for engineers working on the codebase.
 
 ## Architecture
 
@@ -108,21 +178,27 @@ Testing → Documentation → Review → Approval. Nothing is skipped.
 | M10 — Opportunity Scoring | ✅ Complete |
 | M11 — Competition Research | ✅ Complete |
 | M12 — Product Recommendation | ✅ Complete |
-| M13 — ICP Generator | Not started |
-| M14 — Company Discovery | Not started |
-| M15 — Executive Report v2 | Not started |
-| MX.1 — Scheduled Runs, Human-in-the-Loop | Not started |
-| MX.2 — Human-on-the-Loop (exception review) | Not started |
-| MX.3 — Bounded Autonomy (budgets, guardrails, escalation) | Not started |
+| R1 — Web-Grounded Competition Research | ✅ Complete |
+| R2 — Collector Breadth (2–3 sources beyond HN) | Not started |
+| R3 — Report v2 + Cost Telemetry (the sellable deliverable) | Not started |
+| **Sales gate** — 10 design-partner conversations, 3 paid pilots | Blocked on R3 |
+| M13 — ICP Generator | Postponed (may land as R3 report content instead) |
+| M14 — Company Discovery | Cut |
+| M15 — Executive Report v2 | Superseded by R3 |
+| MX.1 — Scheduled Runs, Human-in-the-Loop | Postponed |
+| MX.2 — Human-on-the-Loop (exception review) | Postponed |
+| MX.3 — Bounded Autonomy (budgets, guardrails, escalation) | Postponed |
 
-Execution order is dependency-driven, not strictly numeric (prompts
-before agents: M4 → M3 → M7 → M8…M15 → MX.1 → MX.2 → MX.3, staged
-autonomy). M8 delivers the first end-to-end output; every later
-milestone extends a working pipeline, gated on its eval suite
-(ADR-0006). Testing, Docker/CI hardening, and monitoring are
+Execution order (roadmap v4, ADR-0017): **R1 → R2 → R3 → stop building
+and sell.** After R3 ships, no further engineering happens until the
+sales gate resolves. M8 delivered the first end-to-end output; every
+later milestone extends that same working pipeline, gated on its eval
+suite (ADR-0006). Testing, Docker/CI hardening, and monitoring are
 cross-cutting tracks rather than numbered milestones — see
 `CLAUDE.md` for details.
 
-> **Note:** the roadmap was renumbered on 2026-07-02. ADRs and older
-> commit messages use the previous numbering — the old↔new mapping
-> lives in `CLAUDE.md` under "Legacy numbering".
+> **Note:** the roadmap was renumbered on 2026-07-02, then reordered
+> commercial-first on 2026-07-03 (ADR-0017 — hence "R1/R2/R3" ahead of
+> M13+). ADRs and older commit messages use the previous milestone
+> numbering; the old↔new mapping lives in `CLAUDE.md` under "Legacy
+> numbering".
